@@ -1,14 +1,14 @@
 `<template>
     <UContainer class="pt-8 font-mono">
-        <h1 class="text-7xl font-bold w-fit mt-16 mx-auto">AllChat</h1>
+        <h1 class="text-7xl font-bold w-fit mt-32 mx-auto">AllChat</h1>
         <div v-if="!loadRoom" class="mt-8">
-            <h2 class="text-3xl font-bold w-fit mx-auto">Enter passphrase:</h2>
+            <h2 class="text-2xl font-bold w-fit mx-auto">enter passphrase:</h2>
             <UInput size="xl" v-model.trim="passphrase" @keydown="inputKeydown($event)" placeholder="Secret_room_2137"
                 class="w-72 mx-auto mt-4 caret-primary" @keyup.enter="enterRoom" maxlength="32"
                 :ui="{ icon: { trailing: { pointer: '' } } }">
                 <template #trailing>
-                    <UButton v-show="showEnterButton" color="gray" variant="link"
-                        icon="i-mdi-arrow-right-circle" :padded="false" @click="enterRoom" />
+                    <UButton v-show="showEnterButton" color="gray" variant="link" icon="i-mdi-arrow-right-circle"
+                        :padded="false" @click="enterRoom" />
                 </template>
             </UInput>
         </div>
@@ -51,9 +51,17 @@ export default {
             }
             if (this.passphrase.length > 3 && this.passphrase.length < 32) {
                 this.loadRoom = true;
-                setTimeout(() => {
-                    this.$router.push({ name: 'room', params: { passphrase: this.passphrase } });
-                }, 3000);
+                $fetch('/api/hash', {
+                    method: 'POST',
+                    body: JSON.stringify({ passphrase: this.passphrase })
+                }).then(data => {
+                    setTimeout(() => {
+                        this.$router.push(`/room/${data}`);
+                    }, 1500);
+                }).catch(err => {
+                    console.error(err);
+                    this.loadRoom = false;
+                });
             }
         }
     }

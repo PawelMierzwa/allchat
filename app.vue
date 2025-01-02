@@ -1,7 +1,7 @@
 <template>
   <div>
     <NuxtRouteAnnouncer />
-    <NuxtLoadingIndicator />
+    <NuxtLoadingIndicator :throttle="0" color="orange" />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
