@@ -58,13 +58,16 @@ export default defineWebSocketHandler({
                     const db = useDatabase();
                     if (db) {
                         try {
-                            const msgId = `${Date.now()}-${clientId}`;
-                            // insert new message into db
-                            if (!history[currentRoom]) {
-                                history[currentRoom] = [];
+                            const history = await db.sql`SELECT * FROM messages WHERE room = ${currentRoom}`;
+                            const historyMsgArray = history.rows as Array<{ room: string; message: string, created_at: Date }>;
+                            if (historyMsgArray.length === 0) {
+                                await db.sql`INSERT INTO messages (room, message) VALUES (${currentRoom}, ${content})`;
+                            } else {
+                                const lastMsg = historyMsgArray[historyMsgArray.length - 1];
+                                if (lastMsg.message !== content) {
+                                    await db.sql`INSERT INTO messages (room, message) VALUES (${currentRoom}, ${content})`;
+                                }
                             }
-                            history[currentRoom].push({ id: msgId, sender, content });
-                            await db.sql`INSERT INTO messages (room, message) VALUES (${currentRoom}, ${content}) ON CONFLICT (room) DO UPDATE SET chatHistory = ${JSON.stringify(history)}`;
                         } catch (err) {
                             console.error('Error sending message:', err);
                         }
