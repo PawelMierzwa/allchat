@@ -13,6 +13,7 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       database: true,
+      websocket: true,
     },
     database: {
       users: {
@@ -21,10 +22,10 @@ export default defineNuxtConfig({
           name: 'users',
         }
       },
-      messages: {
+      chat: {
         connector: 'sqlite',
         options: {
-          name: 'messages',
+          name: 'chat',
         }
       },
     }
