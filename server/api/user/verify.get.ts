@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     if (!db) {
         return { code: 500, message: 'Database not available', status: 'error' };
     }
-    const result = await db.sql`SELECT rooms FROM users WHERE id = ${(decoded as JwtPayload).id}`;
+    const result = await db.sql`SELECT rooms FROM accounts WHERE id = ${(decoded as JwtPayload).id}`;
     const rows = result?.rows ?? [];
     if (rows.length === 0) {
         return { code: 404, message: 'Player not found', status: 'error' };
