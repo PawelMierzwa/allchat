@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 const clients = new Map<string, { peer: any; room: string | null }>();
 const channels = new Map<string, { clients: Set<string>; gamemode: string | null }>();
 
@@ -55,19 +57,11 @@ export default defineWebSocketHandler({
                 // Broadcast to a room
                 const currentRoom = clients.get(clientId)?.room;
                 if (currentRoom && channels.has(currentRoom)) {
-                    const db = useDatabase();
+                    const db = useDatabase("chat");
                     if (db) {
                         try {
-                            const history = await db.sql`SELECT * FROM messages WHERE room = ${currentRoom}`;
-                            const historyMsgArray = history.rows as Array<{ room: string; message: string, created_at: Date }>;
-                            if (historyMsgArray.length === 0) {
-                                await db.sql`INSERT INTO messages (room, message) VALUES (${currentRoom}, ${content})`;
-                            } else {
-                                const lastMsg = historyMsgArray[historyMsgArray.length - 1];
-                                if (lastMsg.message !== content) {
-                                    await db.sql`INSERT INTO messages (room, message) VALUES (${currentRoom}, ${content})`;
-                                }
-                            }
+                            const msgId = uuidv4();
+                            await db.sql`INSERT INTO messages (id, roomId, userId, username, message) VALUES (${msgId}, ${currentRoom}, ${sender.id}, ${sender.name}, ${content})`;
                         } catch (err) {
                             console.error('Error sending message:', err);
                         }
@@ -76,7 +70,7 @@ export default defineWebSocketHandler({
                         if (otherClientId !== clientId) {
                             const recipient = clients.get(otherClientId);
                             if (recipient) {
-                                recipient.peer.send(JSON.stringify({ room_id: currentRoom, content, sender }));
+                                recipient.peer.send(JSON.stringify({ content, sender }));
                             }
                         }
                     });

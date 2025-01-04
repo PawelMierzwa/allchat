@@ -1,17 +1,24 @@
 <template>
     <UContainer class="md:px-28 flex flex-col items-center justify-center font-mono w-full">
-        <h1 class="text-xl mb-4 mt-4">Room {{ gameId.slice(0, 8) }}</h1>
+        <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
         <UContainer
             class="px-4 w-11/12 md:w-4/5 lg:w-3/5 max-w-auto py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg h-[70vh] shadow-lg ">
             <!-- chat history -->
             <div ref="messagesContainer" class="overflow-y-auto h-full flex flex-col gap-4">
-                <div v-for="msg in messages" :key="msg.sid" :data-user="msg.sid"
-                    class="data-[user=0]:self-end data-[user=0]:text-end flex flex-col gap-1">
-                    <div :data-user="msg.sid" class="flex data-[user=0]:flex-row-reverse flex-row gap-2 items-center">
-                        <UAvatar src="https://i.pravatar.cc/32" />
-                        <span class="font-bold w-fit">{{ msg.sender }}</span>
+                <div v-if="messages.length > 0" v-for="msg in messages" :key="msg.sender.id + msg.content"
+                    :class="user.id === msg.sender.id ? 'self-end text-end' : ''" class="flex flex-col gap-1">
+                    <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
+                        class="flex gap-2 items-center">
+                        <UAvatar :src="'https://i.pravatar.cc/32?u='+msg.sender.id" />
+                        <span class="font-bold w-fit">{{ msg.sender.name }}</span>
                     </div>
-                    <p :data-user="msg.sid" class="ml-6 mr-0 data-[user=0]:mr-6 break-all">{{ msg.text }}</p>
+                    <p :class="user.id === msg.sender.id ? 'mr-6' : ''" class="ml-6 mr-0 break-all">
+                        {{ msg.content }}
+                    </p>
+                </div>
+                <div v-else class="text-center text-gray-500">
+                    No messages yet.<br>
+                    Be the first to send a message in this chat!
                 </div>
             </div>
             <UInput v-model="message" placeholder="Type a message..." @keyup.enter="sendMessage"
@@ -21,6 +28,12 @@
                 </template>
             </UInput>
         </UContainer>
+        <UContainer v-if="wsDisconnected" class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
+            <div class="h-80 w-80">
+                Connection has been lost.
+                <UButton @click="connect" color="gray" variant="link" class="mt-4">Reconnect</UButton>
+            </div>
+        </UContainer>
     </UContainer>
 </template>
 
@@ -29,46 +42,56 @@ export default {
     data() {
         return {
             message: '',
-            messages: [{
-                sid: 1,
-                sender: 'John Doe',
-                text: 'Hello, world!'
-            }, {
-                sid: 2,
-                sender: 'Jane Doe',
-                text: 'Hi, John!'
-            }],
             ws: null,
-            gameId: null,
+            gameId: '',
+            wsDisconnected: false,
         }
     },
     setup() {
         const route = useRoute();
         const sessionStore = useSessionStore();
         const user = computed(() => sessionStore.user);
+        const messages = ref([]);
+
+        definePageMeta({
+            middleware: 'auth',
+        })
 
         async function fetchRoomHistory() {
-            useFetch('/api/room/' + route.params.id, {
-                onSuccess(data) {
-                    console.log('Room history:', data);
-                    this.messages = data.messages;
-                },
-                onError(error) {
-                    console.error('Failed to fetch room history:', error);
-                },
-            });
+            const { data, error } = await useFetch('/api/room/' + route.params.id);
+            if (error.value) {
+                console.error('Failed to fetch room history:', error.value);
+                const toast = useToast();
+                toast.add({ title: 'Failed to fetch room history', message: error.value.message, variant: 'error' });
+            } else {
+                console.log('Room history:', data.value);
+                messages.value = data.value.messages;
+            }
         }
 
         useHead({
             title: route.params.id.slice(0, 8),
         });
 
-        return { user, fetchRoomHistory };
+        try {
+            fetchRoomHistory();
+        } catch (error) {
+            const toast = useToast();
+            toast.add({ title: 'Failed to fetch room history', message: error, variant: 'error' });
+            console.error('Failed to fetch room history:', error);
+        }
+        return { user, messages };
     },
     mounted() {
         this.gameId = this.$route.params.id;
-        this.connect();
-        this.fetchRoomHistory();
+        const toast = useToast();
+
+        try {
+            this.connect();
+        } catch (error) {
+            console.error('Failed to connect to chat:', error);
+            toast.add({ title: 'Failed to connect to chat', message: error, variant: 'error' });
+        }
     },
     beforeUnmount() {
         if (this.ws) {
@@ -89,11 +112,18 @@ export default {
 
             this.ws.addEventListener("open", () => {
                 console.log("ws", "Connected!");
+                this.wsDisconnected = false;
                 this.ws.send(JSON.stringify({
                     action: 'join',
                     room_id: this.gameId,
                 }));
             });
+
+            this.ws.addEventListener("close", () => {
+                this.wsDisconnected = true;
+                console.log("ws", "Disconnected!");
+            });
+
             this.ws.addEventListener("message", async (event) => {
                 let data = typeof event.data === "string" ? event.data : await event.data.text();
                 const messageData = JSON.parse(data);
@@ -101,12 +131,10 @@ export default {
                 if (messageData.content && messageData.sender) {
                     console.log(`[${messageData.sender}] ${messageData.content}`);
                     // Update chat history
-                    this.history = this.history || {};
-                    const msgId = Object.keys(this.history).length + 1;
-                    this.messages[msgId] = {
+                    this.messages.push({
                         sender: messageData.sender,
                         content: messageData.content,
-                    };
+                    });
                     nextTick(() => {
                         const chatContainer = document.getElementById('chat');
                         chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -134,15 +162,13 @@ export default {
                         },
                     }));
                     // Update local chat history
-                    this.messages = this.messages || {};
-                    const msgId = Object.keys(this.messages).length + 1;
-                    this.messages[msgId] = {
+                    this.messages.push({
                         sender: {
                             id: this.user.id,
                             name: this.user.name,
                         },
                         content: this.message,
-                    };
+                    });
                     this.message = '';
                     this.$nextTick(() => {
                         const container = this.$refs.messagesContainer;
