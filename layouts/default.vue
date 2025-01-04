@@ -3,9 +3,28 @@
         <nav class="flex flex-row justify-between items-center px-4 bg-gray-900 text-white">
             <UHorizontalNavigation :links="links" class="border-b border-gray-200 p-2 dark:border-gray-800">
                 <template #default="{ link, isActive }">
-                    <span :data-active="isActive" class="data-[active=true]:text-primary-50 data-[active=true]:group-hover:text-black data-[active=true]:group-hover:dark:text-white relative">{{ link.label }}</span>
+                    <span :data-active="isActive"
+                        class="data-[active=true]:text-primary-50 data-[active=true]:group-hover:text-black data-[active=true]:group-hover:dark:text-white relative">
+                        {{ link.label }}
+                    </span>
                 </template>
             </UHorizontalNavigation>
+            <ClientOnly>
+                <UDropdown :items="items" :popper="{ arrow: true }" v-if="isAuthenticated">
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm">Profile</p>
+                        <UAvatar :src="'https://i.pravatar.cc/32?u=' + user.id" size="xs" />
+                    </div>
+                    <template #account>
+                        <div class="flex items-center">
+                            <div class="ml-2">
+                                <p class="font-bold text-start">{{ user.name }}</p>
+                                <p class="text-xs">{{ user.email }}</p>
+                            </div>
+                        </div>
+                    </template>
+                </UDropdown>
+            </ClientOnly>
         </nav>
         <UContainer>
             <slot />
@@ -23,15 +42,43 @@ export default {
             links: [
                 [{ label: 'AllChat', to: '/' }],
                 [
-                    { label: 'Profile', avatar: { src: 'https://i.pravatar.cc/32' }, badge: 'test' },
                     { label: 'Settings', to: '/settings', icon: 'i-heroicons-cog' },
                     { label: 'About', to: '/about', icon: 'i-heroicons-information-circle' },
-                ]]
+                ]
+            ],
         }
     },
     setup() {
+        const sessionStore = useSessionStore();
+        const user = computed(() => sessionStore.user);
+        const isAuthenticated = computed(() => sessionStore.isAuthenticated);
+        const logout = function () {
+            sessionStore.logout();
+        }
+
+        const items = [
+            [{
+                label: 'Profile',
+                slot: 'account',
+                disabled: true,
+            },
+            ], [{
+                label: 'Change Notes',
+                icon: 'i-mdi-clipboard-text',
+                shortcuts: ['C'],
+                click: () => {
+                    console.log('Change notes');
+                }
+            }, {
+                label: 'Logout',
+                icon: 'i-mdi-logout',
+                shortcuts: ['L'],
+                click: () => logout(),
+            }],
+        ]
+
         useHead({
-            titleTemplate (titleChunk) {
+            titleTemplate(titleChunk) {
                 return titleChunk ? `AllChat | ${titleChunk}` : 'AllChat';
             },
             meta: [
@@ -40,6 +87,8 @@ export default {
                 { name: 'author', content: 'BadInfluence' }
             ]
         });
+
+        return { user, items, isAuthenticated };
     },
     computed: {
         currentYear() {
