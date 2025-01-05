@@ -1,12 +1,43 @@
 import { v4 as uuidv4 } from "uuid";
 
-const clients = new Map<string, { peer: any; room: string | null }>();
+const clients = new Map<string, { peer: any; room: string | null; rateLimiter: RateLimiter }>();
 const channels = new Map<string, { clients: Set<string>; gamemode: string | null }>();
+
+class RateLimiter {
+    private tokens: number;
+    private lastRefill: number;
+    private readonly refillRate: number;
+    private readonly capacity: number;
+
+    constructor(refillRate: number, capacity: number) {
+        this.tokens = capacity;
+        this.lastRefill = Date.now();
+        this.refillRate = refillRate;
+        this.capacity = capacity;
+    }
+
+    private refill() {
+        const now = Date.now();
+        const elapsed = now - this.lastRefill;
+        const tokensToAdd = (elapsed / 1000) * this.refillRate;
+        this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
+        this.lastRefill = now;
+    }
+
+    public tryRemoveTokens(count: number): boolean {
+        this.refill();
+        if (this.tokens >= count) {
+            this.tokens -= count;
+            return true;
+        }
+        return false;
+    }
+}
 
 export default defineWebSocketHandler({
     open(peer) {
         peer.send({ user: "server", message: `Welcome ${peer}!` });
-        clients.set(peer.id, { peer, room: null });
+        clients.set(peer.id, { peer, room: null, rateLimiter: new RateLimiter(0.5, 4) }); // 0.5 tokens per second, capacity at 4 tokens
         peer.publish("chat", { user: "server", message: `${peer} joined!` });
         peer.subscribe("chat");
     },
@@ -14,6 +45,18 @@ export default defineWebSocketHandler({
         try {
             const { action, room_id, content, sender } = JSON.parse(message.toString());
             const clientId = peer.id;
+            const client = clients.get(clientId);
+
+            if (!client) {
+                peer.send(JSON.stringify({ error: 'Client not found' }));
+                return;
+            }
+
+            if (!client.rateLimiter.tryRemoveTokens(1)) {
+                peer.send(JSON.stringify({ error: 'Rate limit exceeded' }));
+                return;
+            }
+
             if (action === 'create') {
                 // server action to create a room
                 if (!channels.has(room_id)) {
@@ -30,7 +73,6 @@ export default defineWebSocketHandler({
                     if (prevRoom && channels.has(prevRoom)) {
                         channels.get(prevRoom)?.clients.delete(clientId);
                     }
-                    const client = clients.get(clientId);
                     if (client) {
                         client.room = room_id;
                     }
@@ -48,7 +90,6 @@ export default defineWebSocketHandler({
                 if (currentRoom && channels.has(currentRoom)) {
                     channels.get(currentRoom)?.clients.delete(clientId);
                 }
-                const client = clients.get(clientId);
                 if (client) {
                     client.room = null;
                 }

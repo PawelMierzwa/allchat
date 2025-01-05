@@ -23,11 +23,16 @@
             </div>
             <div v-if="newMessages > 0" @click="scrollToBottom"
                 class="absolute bottom-24 left-1/2 -translate-x-1/2 bg-primary-50 text-primary-900 dark:bg-primary-900 dark:text-primary-50 rounded-full px-2 py-1 text-xs cursor-pointer">
-                <span>{{ newMessages > 10 ? '9+' : newMessages }}</span> new {{ newMessages === 1 ? 'message' :
-                'messages' }}
+                <span>{{ newMessages > 10 ? '9+' : newMessages }}</span>
+                new {{ newMessages === 1 ? 'message' : 'messages' }}
+            </div>
+            <div v-if="isRateLimited" class="text-center text-red-500">
+                You're sending messages too fast!<br>
+                Please wait a moment before sending another message.
             </div>
             <UInput v-model="message" placeholder="Type a message..." @keyup.enter="sendMessage"
-                :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256" class="w-full mt-auto">
+                 :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256"
+                class="w-full mt-auto">
                 <template #trailing>
                     <UButton color="gray" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
                 </template>
@@ -49,6 +54,37 @@
 </template>
 
 <script>
+class RateLimiter {
+    constructor(refillRate, capacity) {
+        this.tokens = capacity;
+        this.lastRefill = Date.now();
+        this.refillRate = refillRate;
+        this.capacity = capacity;
+    }
+
+    refill() {
+        const now = Date.now();
+        const elapsed = now - this.lastRefill;
+        const tokensToAdd = (elapsed / 1000) * this.refillRate;
+        this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
+        this.lastRefill = now;
+    }
+
+    tryRemoveTokens(count) {
+        this.refill();
+        if (this.tokens >= count) {
+            this.tokens -= count;
+            return true;
+        }
+        return false;
+    }
+
+    isRateLimited() {
+        this.refill();
+        return this.tokens < 1;
+    }
+}
+
 export default {
     data() {
         return {
@@ -58,6 +94,8 @@ export default {
             wsDisconnected: false,
             selectedUser: null,
             newMessages: 0,
+            rateLimiter: new RateLimiter(0.5, 4),
+            isRateLimited: false,
         }
     },
     setup() {
@@ -65,6 +103,7 @@ export default {
         const sessionStore = useSessionStore();
         const user = computed(() => sessionStore.user);
         const messages = ref([]);
+        const toast = useToast();
 
         definePageMeta({
             middleware: 'auth',
@@ -75,7 +114,7 @@ export default {
             if (error.value) {
                 console.error('Failed to fetch room history:', error.value);
                 const toast = useToast();
-                toast.add({ title: 'Failed to fetch room history', message: error.value.message, variant: 'error' });
+                toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
             } else {
                 messages.value = data.value.messages;
             }
@@ -88,21 +127,18 @@ export default {
         try {
             fetchRoomHistory();
         } catch (error) {
-            const toast = useToast();
-            toast.add({ title: 'Failed to fetch room history', message: error, variant: 'error' });
+            this.toast.add({ title: 'Error', description: error, color: 'red' });
             console.error('Failed to fetch room history:', error);
         }
-        return { user, messages };
+        return { user, messages, toast };
     },
     mounted() {
         this.gameId = this.$route.params.id;
-        const toast = useToast();
-
         try {
             this.connect();
         } catch (error) {
             console.error('Failed to connect to chat:', error);
-            toast.add({ title: 'Failed to connect to chat', message: error, variant: 'error' });
+            this.toast.add({ title: 'Error', description: error, color: 'red' });
         }
 
         this.scrollToBottom();
@@ -157,12 +193,19 @@ export default {
                     console.log(`Left room ${messageData.room_id}`);
                 } else if (messageData.error) {
                     console.error("Server error:", messageData.error);
+                    this.toast.add({ title: 'Error', description: messageData.error, color: 'red' });
                 }
             });
         },
         sendMessage() {
             if (this.message.trim() === '') return;
             if (this.message.length > 0) {
+                if (!this.rateLimiter.tryRemoveTokens(1)) {
+                    this.isRateLimited = true;
+                    console.error('Rate limit exceeded.');
+                    this.toast.add({ title: 'Rate limit exceeded', description: 'You`re sending messages too fast!', color: 'red' });
+                    return;
+                }
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                     this.ws.send(JSON.stringify({
                         action: 'message',
@@ -173,6 +216,7 @@ export default {
                             name: this.user.name,
                         },
                     }));
+                    this.isRateLimited = false;
                     // Update local chat history
                     this.messages.push({
                         sender: {
@@ -192,6 +236,8 @@ export default {
             if (this.ws) {
                 this.ws.close();
             }
+            const isSecure = location.protocol === "https:";
+            const url = (isSecure ? "wss://" : "ws://") + location.host + "/chatroom";
             this.ws = new WebSocket(url);
             this.wsDisconnected = false;
         },
