@@ -1,15 +1,15 @@
 <template>
-    <UContainer class="md:px-28 flex flex-col items-center justify-center font-mono w-full">
+    <UContainer class="flex flex-col items-center justify-center font-mono">
         <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
-        <UContainer
+        <div
             class="px-4 w-11/12 md:w-4/5 lg:w-3/5 max-w-auto py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg h-[70vh] shadow-lg ">
             <!-- chat history -->
-            <div ref="messagesContainer" class="overflow-y-auto h-full flex flex-col gap-4">
+            <div ref="messagesContainer" class="overflow-y-auto h-full flex flex-col gap-4 px-2">
                 <div v-if="messages.length > 0" v-for="msg in messages" :key="msg.sender.id + msg.content"
                     :class="user.id === msg.sender.id ? 'self-end text-end' : ''" class="flex flex-col gap-1">
                     <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
-                        class="flex gap-2 items-center">
-                        <UAvatar :src="'https://i.pravatar.cc/32?u='+msg.sender.id" />
+                        class="flex gap-2 items-center" @click="openMiniProfile(msg.sender)">
+                        <UAvatar :src="'https://i.pravatar.cc/32?u=' + msg.sender.id" />
                         <span class="font-bold w-fit">{{ msg.sender.name }}</span>
                     </div>
                     <p :class="user.id === msg.sender.id ? 'mr-6' : ''" class="ml-6 mr-0 break-all">
@@ -21,19 +21,30 @@
                     Be the first to send a message in this chat!
                 </div>
             </div>
+            <div v-if="newMessages > 0" @click="scrollToBottom"
+                class="absolute bottom-24 left-1/2 -translate-x-1/2 bg-primary-50 text-primary-900 dark:bg-primary-900 dark:text-primary-50 rounded-full px-2 py-1 text-xs cursor-pointer">
+                <span>{{ newMessages > 10 ? '9+' : newMessages }}</span> new {{ newMessages === 1 ? 'message' :
+                'messages' }}
+            </div>
             <UInput v-model="message" placeholder="Type a message..." @keyup.enter="sendMessage"
                 :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256" class="w-full mt-auto">
                 <template #trailing>
                     <UButton color="gray" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
                 </template>
             </UInput>
-        </UContainer>
-        <UContainer v-if="wsDisconnected" class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
-            <div class="h-80 w-80">
-                Connection has been lost.
-                <UButton @click="connect" color="gray" variant="link" class="mt-4">Reconnect</UButton>
+        </div>
+        <div v-if="wsDisconnected"
+            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
+            <div class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+                <p>Connection has been lost.</p>
+                <UButton @click="reconnect" color="gray" variant="link" class="mt-4">Reconnect</UButton>
             </div>
-        </UContainer>
+        </div>
+        <div class="absolute top-0 left-0 w-full h-full dark:bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
+            @click="selectedUser = null" v-if="selectedUser">
+            <MiniProfile :user="selectedUser" :room="$route.params.id" @click.stop />
+            <UButton @click="selectedUser = null" color="gray" variant="link">Close</UButton>
+        </div>
     </UContainer>
 </template>
 
@@ -45,6 +56,8 @@ export default {
             ws: null,
             gameId: '',
             wsDisconnected: false,
+            selectedUser: null,
+            newMessages: 0,
         }
     },
     setup() {
@@ -64,7 +77,6 @@ export default {
                 const toast = useToast();
                 toast.add({ title: 'Failed to fetch room history', message: error.value.message, variant: 'error' });
             } else {
-                console.log('Room history:', data.value);
                 messages.value = data.value.messages;
             }
         }
@@ -92,6 +104,8 @@ export default {
             console.error('Failed to connect to chat:', error);
             toast.add({ title: 'Failed to connect to chat', message: error, variant: 'error' });
         }
+
+        this.scrollToBottom();
     },
     beforeUnmount() {
         if (this.ws) {
@@ -135,10 +149,8 @@ export default {
                         sender: messageData.sender,
                         content: messageData.content,
                     });
-                    nextTick(() => {
-                        const chatContainer = document.getElementById('chat');
-                        chatContainer.scrollTop = chatContainer.scrollHeight;
-                    });
+                    this.showNewMessageToast();
+
                 } else if (messageData.status === 'joined') {
                     console.log(`Joined room ${messageData.room_id}`);
                 } else if (messageData.status === 'left') {
@@ -170,14 +182,34 @@ export default {
                         content: this.message,
                     });
                     this.message = '';
-                    this.$nextTick(() => {
-                        const container = this.$refs.messagesContainer;
-                        container.scrollTop = container.scrollHeight;
-                    });
+                    this.scrollToBottom();
                 } else {
                     console.error('WebSocket is not connected.');
                 }
             }
+        },
+        reconnect() {
+            if (this.ws) {
+                this.ws.close();
+            }
+            this.ws = new WebSocket(url);
+            this.wsDisconnected = false;
+        },
+        openMiniProfile(user) {
+            this.selectedUser = user;
+        },
+        scrollToBottom() {
+            this.newMessages = 0;
+            this.$nextTick(() => {
+                const container = this.$refs.messagesContainer;
+                container.scrollTo({
+                    top: container.scrollHeight,
+                    behavior: 'smooth'
+                });
+            });
+        },
+        showNewMessageToast() {
+            this.newMessages++;
         },
     },
 }

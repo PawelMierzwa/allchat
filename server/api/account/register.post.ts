@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
+import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
     const { username, email, password } = await readBody(event);
@@ -18,7 +19,19 @@ export default defineEventHandler(async (event) => {
     const hash = await hashPassword(password);
     const id = uuidv4();
     await db.sql`INSERT INTO accounts (id, username, email, password) VALUES (${id}, ${username}, ${email}, ${hash})`;
-    return { status: 200, message: "Account created" };
+
+    // Generate a JWT token
+    const secret = useRuntimeConfig(event).jwtSecret;
+    const token = jwt.sign({ id, email, name: username }, secret as jwt.Secret);
+    setCookie(event, 'token', token);
+
+    return {
+        status: 200, message: {
+            id: id,
+            email: email,
+            name: username,
+        }
+    };
 });
 
 async function hashPassword(password: string) {

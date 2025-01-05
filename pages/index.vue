@@ -119,14 +119,18 @@ export default {
             this.loadRoom = false;
             clearTimeout(this.enterTimeout);
         },
-        handleRegister() {
+        handleRegister(userData) {
             this.showRegister = false;
-            this.showLogin = true;
-            this.toast.add({ description: 'Account created. You can now login.' });
+            this.startSession(userData.id, userData.name, userData.email);
+            this.toast.add({ description: 'Registered successfully.'});
+            if (this.passphraseCache) {
+                this.passphrase = this.passphraseCache;
+                this.enterRoom();
+            }
         },
-        handleLogin(user) {
+        handleLogin(userData) {
             this.showLogin = false;
-            this.startSession(user.id, user.name, user.email);
+            this.startSession(userData.id, userData.name, userData.email);
             this.toast.add({ description: 'Logged in successfully.'});
             if (this.passphraseCache) {
                 this.passphrase = this.passphraseCache;
