@@ -16,13 +16,19 @@ export default defineEventHandler(async (event) => {
         };
     }
     const query = getQuery(event);
-    // there should be only one query parameter, room
-    if (Object.keys(query).length !== 0 && !query.room) {
+    // there should be only one query parameter, extended (optional)
+    if (Object.keys(query).length > 1) {
+        return {
+            code: 400,
+            message: 'Bad Request'
+        };
+    } else if (Object.keys(query).length === 1 && !query.extended) {
         return {
             code: 400,
             message: 'Bad Request'
         };
     }
+
 
     // stats:
     // - total messages in the room
@@ -44,28 +50,21 @@ export default defineEventHandler(async (event) => {
                     message: 'Unauthorized'
                 };
             } else {
-                const db = useDatabase('users');
-                const userQueryResult = await db.sql`SELECT rooms FROM accounts WHERE id = ${(decoded as jwt.JwtPayload).id}`;
-                const user = userQueryResult.rows ? userQueryResult.rows[0] : null;
-                if (!user) {
+                const userId = (decoded as jwt.JwtPayload).id;
+                const userDb = useDatabase('users');
+                const unlockResult = await userDb.sql`SELECT * FROM unlocks WHERE roomId = ${id} AND userId = ${userId}`;
+                if (!unlockResult.rows || unlockResult.rows.length === 0) {
                     return {
-                        code: 401,
-                        message: 'Unauthorized'
-                    };
-                }
-
-                if (!(user.rooms as string).split(" ").includes(query.room as string)) {
-                    return {
-                        code: 401,
-                        message: 'Unauthorized'
+                        code: 403,
+                        message: 'Forbidden'
                     };
                 }
             }
         });
     }
 
-    const db = useDatabase('chat');
-    const roomStats = await db.sql`SELECT * FROM rooms WHERE id = ${id}`;
+    const chatDb = useDatabase('chat');
+    const roomStats = await chatDb.sql`SELECT * FROM rooms WHERE id = ${id}`;
     if (!roomStats.rows || roomStats.rows.length === 0) {
         return {
             code: 404,
@@ -76,48 +75,40 @@ export default defineEventHandler(async (event) => {
     const room = roomStats.rows[0];
     // get total messages in the room
     // dont get the messages, just the count
-    const messageCountQueryResult = await db.sql`SELECT COUNT(*) FROM messages WHERE roomId = ${id}`;
+    const messageCountQueryResult = await chatDb.sql`SELECT COUNT(*) as count FROM messages WHERE roomId = ${id}`;
     const totalMessages = messageCountQueryResult.rows ? messageCountQueryResult.rows[0].count : 0;
 
     const totalViews = room.views;
 
     // get unique users in the room
-    const uniqueMsgSendersQueryResult = await db.sql`SELECT DISTINCT userId FROM messages WHERE roomId = ${id}`;
+    const uniqueMsgSendersQueryResult = await chatDb.sql`SELECT DISTINCT userId FROM messages WHERE roomId = ${id}`;
     const totalUniqueMessageSenders = uniqueMsgSendersQueryResult.rows ? uniqueMsgSendersQueryResult.rows.length : 0;
 
-    const discoveredDate = room.discoveredAt;
+    if (query.extended === 'true') {
+        const lastMessageQueryResult = await chatDb.sql`SELECT * FROM messages WHERE roomId = ${id} ORDER BY createdAt DESC LIMIT 1`;
+        const lastMessage = lastMessageQueryResult.rows ? lastMessageQueryResult.rows[0] : null;
 
-    if (query.extended && query.extended === 'true') {
+        const stats = {
+            totalMessages,
+            totalViews,
+            totalUniqueMessageSenders,
+            lastMessage
+        };
+
+        return { code: 200, stats };
+    } else {
         const userDb = useDatabase('users');
 
         const totalUniqueUsersQueryResult = await userDb.sql`SELECT COUNT(DISTINCT userId) FROM unlocks WHERE roomId = ${id}`;
-        const totalUniqueUsers = totalUniqueUsersQueryResult.rows ? totalUniqueUsersQueryResult.rows[0].count : 0;
-
-        const lastMessageQueryResult = await db.sql`SELECT * FROM messages WHERE roomId = ${id} ORDER BY createdAt DESC LIMIT 1`;
-        const lastMessage = lastMessageQueryResult.rows ? lastMessageQueryResult.rows[0] : null;
-
-        const discovererQueryResult = await userDb.sql`SELECT username FROM accounts WHERE id = ${room.discoveredBy as string}`;
-        const discoverer = discovererQueryResult.rows ? discovererQueryResult.rows[0].username : null;
+        const totalUniqueUsers = totalUniqueUsersQueryResult.rows ? totalUniqueUsersQueryResult.rows.length : 0;
 
         const stats = {
             totalMessages,
             totalViews,
             totalUniqueUsers,
             totalUniqueMessageSenders,
-            discoveredDate, // if there are no messages, this will be null
-            lastMessage, // if there are no messages, this will be null
-            discoverer // if there are no discoverers, this will be null
         };
 
         return { code: 200, stats };
     }
-
-    const stats = {
-        totalMessages,
-        totalViews,
-        totalUniqueMessageSenders,
-        discoveredDate
-    };
-
-    return { code: 200, stats };
 });

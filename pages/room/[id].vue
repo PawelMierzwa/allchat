@@ -1,12 +1,21 @@
 <template>
     <UContainer class="flex flex-col items-center justify-center font-mono">
-        <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
+        <div class="w-11/12 md:w-4/5 lg:w-3/5 items-center relative justify-center flex gap-4">
+            <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
+            <div class="absolute flex items-center right-0">
+                <UButton @click="showRoomStats = true" size="sm" class="w-8 h-8" color="gray" icon="i-mdi-chart-bar"
+                    variant="link" />
+            </div>
+        </div>
         <div
             class="px-4 w-11/12 md:w-4/5 lg:w-3/5 max-w-auto py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg h-[70vh] shadow-lg ">
             <!-- chat history -->
             <div ref="messagesContainer" class="overflow-y-auto h-full flex flex-col gap-4 px-2">
+                <div v-if="Object.keys(discover).length > 0 && messages.length > 0" class="text-center text-gray-500 text-sm">
+                    <p>Room discovered by {{ discover.username }} at {{ discover.discoveredAt }}</p>
+                </div>
                 <div v-if="messages.length > 0" v-for="msg in messages" :key="msg.sender.id + msg.content"
-                    :class="user.id === msg.sender.id ? 'self-end text-end' : ''" class="flex flex-col gap-1">
+                    :class="user.id === msg.sender.id ? 'self-end text-end' : ''" class="flex flex-col gap-1 w-fit">
                     <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
                         class="flex gap-2 items-center" @click="openMiniProfile(msg.sender)">
                         <UAvatar :src="'https://i.pravatar.cc/32?u=' + msg.sender.id" />
@@ -26,13 +35,12 @@
                 <span>{{ newMessages > 10 ? '9+' : newMessages }}</span>
                 new {{ newMessages === 1 ? 'message' : 'messages' }}
             </div>
-            <div v-if="isRateLimited" class="text-center text-red-500">
+            <div v-if="rateLimited" class="text-center text-red-500">
                 You're sending messages too fast!<br>
                 Please wait a moment before sending another message.
             </div>
             <UInput v-model="message" placeholder="Type a message..." @keyup.enter="sendMessage"
-                 :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256"
-                class="w-full mt-auto">
+                :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256" class="w-full mt-auto">
                 <template #trailing>
                     <UButton color="gray" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
                 </template>
@@ -45,10 +53,17 @@
                 <UButton @click="reconnect" color="gray" variant="link" class="mt-4">Reconnect</UButton>
             </div>
         </div>
-        <div class="absolute top-0 left-0 w-full h-full dark:bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
-            @click="selectedUser = null" v-if="selectedUser">
+        <div v-else-if="selectedUser"
+            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
+            @click="selectedUser = null">
             <MiniProfile :user="selectedUser" :room="$route.params.id" @click.stop />
-            <UButton @click="selectedUser = null" color="gray" variant="link">Close</UButton>
+            <UButton @click="selectedUser = null" class="text-gray-100 hover:text-gray-300 dark:text-gray-400"
+                color="gray" variant="link">Close</UButton>
+        </div>
+        <div v-else-if="showRoomStats"
+            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
+            @click="showRoomStats = false">
+            <RoomStatsDialog :room="$route.params.id" :discover="discover" @click.stop />
         </div>
     </UContainer>
 </template>
@@ -95,7 +110,8 @@ export default {
             selectedUser: null,
             newMessages: 0,
             rateLimiter: new RateLimiter(0.5, 4),
-            isRateLimited: false,
+            rateLimited: false,
+            showRoomStats: false,
         }
     },
     setup() {
@@ -103,6 +119,7 @@ export default {
         const sessionStore = useSessionStore();
         const user = computed(() => sessionStore.user);
         const messages = ref([]);
+        const discover = ref({});
         const toast = useToast();
 
         definePageMeta({
@@ -117,6 +134,7 @@ export default {
                 toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
             } else {
                 messages.value = data.value.messages;
+                discover.value = data.value.discover;
             }
         }
 
@@ -130,7 +148,7 @@ export default {
             this.toast.add({ title: 'Error', description: error, color: 'red' });
             console.error('Failed to fetch room history:', error);
         }
-        return { user, messages, toast };
+        return { user, messages, toast, discover };
     },
     mounted() {
         this.gameId = this.$route.params.id;
@@ -201,7 +219,7 @@ export default {
             if (this.message.trim() === '') return;
             if (this.message.length > 0) {
                 if (!this.rateLimiter.tryRemoveTokens(1)) {
-                    this.isRateLimited = true;
+                    this.rateLimited = true;
                     console.error('Rate limit exceeded.');
                     this.toast.add({ title: 'Rate limit exceeded', description: 'You`re sending messages too fast!', color: 'red' });
                     return;
@@ -216,7 +234,7 @@ export default {
                             name: this.user.name,
                         },
                     }));
-                    this.isRateLimited = false;
+                    this.rateLimited = false;
                     // Update local chat history
                     this.messages.push({
                         sender: {

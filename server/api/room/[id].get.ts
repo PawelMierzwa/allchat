@@ -49,8 +49,28 @@ export default defineEventHandler(async (event) => {
     const msgDb = useDatabase("chat");
     const messages = await msgDb.sql`SELECT * FROM messages WHERE roomId = ${id}`;
 
+    // get the room discoverer
+    const roomQuery = await msgDb.sql`SELECT * FROM rooms WHERE id = ${id}`;
+    const roomRows = roomQuery?.rows ?? [];
+    if (roomRows.length === 0) {
+        return { code: 404, message: 'Not Found' };
+    }
+
+    const room = roomRows[0];
+    const roomDiscoverer = room.discoveredBy;
+    const discoveredAt = room.discoveredAt;
+    const discovererQuery = await usersDb.sql`SELECT * FROM accounts WHERE id = ${roomDiscoverer as string}`;
+    const discovererRows = discovererQuery?.rows ?? [];
+    
+    let discovererName = "???";
+    if (discovererRows.length === 0) {
+        discovererName = "you!";
+    } else {
+        discovererName = discovererRows[0].username as string;
+    }
+
     if (!messages.rows || messages.rows.length === 0) {
-        return { code: 200, messages: [] };
+        return { code: 200, messages: [], discover: { username: discovererName, discoveredAt: discoveredAt } };
     }
     // format the messages to: { sender: { id: string, name: string }, content: string, createdAt: string }
     messages.rows = messages.rows?.map((msg: any) => {
@@ -61,5 +81,5 @@ export default defineEventHandler(async (event) => {
         };
     });
 
-    return { code: 200, messages: messages.rows };
+    return { code: 200, messages: messages.rows, discover: { username: discovererName, discoveredAt: discoveredAt } };
 });
