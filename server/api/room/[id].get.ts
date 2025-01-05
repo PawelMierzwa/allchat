@@ -21,15 +21,15 @@ export default defineEventHandler(async (event) => {
         userId = (decoded as jwt.JwtPayload).id;
     });
 
-    const db = useDatabase("users");
-    const result = await db.sql`SELECT * FROM accounts WHERE id = ${userId}`;
-    const rows = result?.rows ?? [];
+    const usersDb = useDatabase("users");
+    const userResult = await usersDb.sql`SELECT * FROM accounts WHERE id = ${userId}`;
+    const userRows = userResult?.rows ?? [];
 
-    if (rows.length === 0) {
+    if (userRows.length === 0) {
         return { code: 404, message: 'Not Found' };
     }
 
-    const user = rows[0];
+    const user = userRows[0];
     const secret = useRuntimeConfig().jwtSecret;
     let decoded;
     try {
@@ -40,19 +40,19 @@ export default defineEventHandler(async (event) => {
     }
 
     // need to check if the user is allowed to view this match
-    if (!(user.rooms as String).split(" ").includes(id)) {
-        console.error('User not allowed');
+    const unlockResult = await usersDb.sql`SELECT * FROM unlocks WHERE roomId = ${id} AND userId = ${userId}`;
+    const unlockRows = unlockResult?.rows ?? [];
+    if (unlockRows.length === 0) {
         return { code: 403, message: 'Forbidden' };
     }
 
     const msgDb = useDatabase("chat");
     const messages = await msgDb.sql`SELECT * FROM messages WHERE roomId = ${id}`;
-    console.log("messages: ", messages);
 
-    // format the messages to: { sender: { id: string, name: string }, content: string }
-    if (!messages.rows) {
+    if (!messages.rows || messages.rows.length === 0) {
         return { code: 200, messages: [] };
     }
+    // format the messages to: { sender: { id: string, name: string }, content: string, createdAt: string }
     messages.rows = messages.rows?.map((msg: any) => {
         return {
             sender: { id: msg.userId, name: msg.username },
@@ -60,8 +60,6 @@ export default defineEventHandler(async (event) => {
             createdAt: msg.createdAt
         };
     });
-    console.log("reformated messages: ", messages.rows);
-    
 
     return { code: 200, messages: messages.rows };
 });
