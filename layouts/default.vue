@@ -1,7 +1,7 @@
 <template>
     <div>
-        <nav class="flex flex-row justify-between items-center px-4 bg-gray-900 text-white">
-            <UHorizontalNavigation :links="links" class="border-b border-gray-200 p-2 dark:border-gray-800">
+        <nav class="flex flex-row justify-between items-center px-4 bg-gray-900">
+            <UHorizontalNavigation :links="links" class="p-2">
                 <template #default="{ link, isActive }">
                     <span :data-active="isActive"
                         class="data-[active=true]:text-primary-50 data-[active=true]:group-hover:text-black data-[active=true]:group-hover:dark:text-white relative">
@@ -10,16 +10,18 @@
                 </template>
             </UHorizontalNavigation>
             <ClientOnly>
-                <UDropdown :items="items" :popper="{ arrow: true }" v-if="isAuthenticated">
-                    <div class="flex items-center gap-2">
-                        <p class="text-sm">Profile</p>
-                        <UAvatar :src="'https://i.pravatar.cc/32?u=' + user.id" size="xs" />
+                <UDropdown :items="items" v-model:open="open" :popper="{ arrow: true }" v-if="isAuthenticated">
+                    <div :data-open="open"
+                        class="group flex items-center gap-2 p-2 hover:bg-gray-800/40 data-[open=true]:bg-gray-800/40 text-gray-500 dark:text-gray-400 hover:text-primary-50 hover:dark:text-white data-[open=true]:text-primary-50 data-[open=true]:dark:text-white rounded-lg">
+                        <p class="text-sm select-none">Profile</p>
+                        <UAvatar :src="'https://i.pravatar.cc/32?u=' + user.id" size="xs"
+                            :class="open ? 'grayscale-0' : 'grayscale'" class="group-hover:grayscale-0" />
                     </div>
                     <template #account>
                         <div class="flex items-center">
                             <div class="ml-2">
                                 <p class="font-bold text-start">{{ user.name }}</p>
-                                <p class="text-xs">{{ user.email }}</p>
+                                <p class="text-xs text-start">{{ user.email }}</p>
                             </div>
                         </div>
                     </template>
@@ -46,6 +48,7 @@ export default {
                     { label: 'About', to: '/about', icon: 'i-heroicons-information-circle' },
                 ]
             ],
+            open: false,
         }
     },
     setup() {
@@ -58,23 +61,35 @@ export default {
 
         const items = [
             [{
-                label: 'Profile',
+                label: 'Account',
                 slot: 'account',
                 disabled: true,
             },
-            ], [{
-                label: 'Change Notes',
-                icon: 'i-mdi-clipboard-text',
-                shortcuts: ['C'],
-                click: () => {
-                    console.log('Change notes');
+            ],
+            [
+                {
+                    label: 'Profile',
+                    icon: 'i-mdi-account',
+                    to: '/profile',
+                    shortcuts: ['P'],
                 }
-            }, {
-                label: 'Logout',
-                icon: 'i-mdi-logout',
-                shortcuts: ['L'],
-                click: () => logout(),
-            }],
+                , {
+                    label: 'Logout',
+                    icon: 'i-mdi-logout',
+                    shortcuts: ['L'],
+                    click: () => logout(),
+                }
+            ],
+            [
+                {
+                    label: 'Change Notes',
+                    icon: 'i-mdi-clipboard-text',
+                    shortcuts: ['C'],
+                    click: () => {
+                        console.log('Change notes');
+                    }
+                }
+            ],
         ]
 
         useHead({
