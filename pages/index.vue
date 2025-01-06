@@ -1,9 +1,16 @@
 `<template>
     <UContainer class="pt-8 font-mono">
-        <h1 class="text-7xl font-bold w-fit mt-32 mx-auto">AllChat</h1>
-        <div v-if="!loadRoom" class="mt-8 flex flex-col items-center justify-center">
-            <h2 class="text-2xl font-bold w-fit mx-auto">enter passphrase:</h2>
-            <UInput size="xl" v-model.trim="passphrase" @keydown="inputKeydown($event)" placeholder="Secret_room_2137"
+        <div class="mx-auto flex flex-col items-center justify-center w-fit">
+            <h1 class="text-7xl font-bold w-fit mt-32">AllChat</h1>
+            <UButton class="dark:text-gray-500 text-xs self-end w-fit" @click="showRules = true" color="gray"
+                variant="link">
+                What's this?
+            </UButton>
+        </div>
+        <div v-if="!loadRoom"
+            class="mt-6 flex flex-col items-center justify-center bg-zinc-900 p-8 rounded-xl ring ring-primary-500 w-fit mx-auto">
+            <h2 class="text-2xl w-fit mx-auto">enter passphrase:</h2>
+            <UInput size="lg" v-model.trim="passphrase" @keydown="inputKeydown($event)" placeholder="Secret_room_2137"
                 class="w-72 mx-auto mt-4 caret-primary" @keyup.enter="enterRoom" maxlength="32"
                 :ui="{ icon: { trailing: { pointer: '' } } }">
                 <template #trailing>
@@ -23,20 +30,15 @@
         </div>
         <div v-if="showLogin"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
-            <LoginDialog @login="handleLogin">
-                <UButton variant="link" icon="i-heroicons-x-mark" @click="showLogin = false" class="self-end" />
-            </LoginDialog>
-            <a class="text-primary-500 hover:text-primary-800 mt-6 cursor-pointer"
-                @click="showLogin = false; showRegister = true">Don't have an account?</a>
+            <LoginDialog @login="handleLogin" @noAcc="showLogin = false; showRegister = true" @close="showLogin = false" />
         </div>
         <div v-else-if="showRegister"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
-            <RegisterDialog @register="handleRegister">
-                <UButton variant="link" icon="i-heroicons-x-mark" @click="showRegister = false" class="self-end"
-                    :padded="false" />
-            </RegisterDialog>
-            <a class="text-primary-500 hover:text-primary-800 mt-6 cursor-pointer"
-                @click="showRegister = false; showLogin = true">Already have an account?</a>
+            <RegisterDialog @register="handleRegister" @hasAcc="showRegister = false; showLogin = true" @close="showRegister = false" />
+        </div>
+        <div v-else-if="showRules"
+            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
+            <RulesDialog @close="showRules = false" />
         </div>
     </UContainer>
 </template>
@@ -50,7 +52,8 @@ export default {
             showLogin: false,
             showRegister: false,
             passphraseCache: '',
-            enterTimeout: null
+            enterTimeout: null,
+            showRules: false,
         }
     },
     setup() {
@@ -122,7 +125,7 @@ export default {
         handleRegister(userData) {
             this.showRegister = false;
             this.startSession(userData.id, userData.name, userData.email);
-            this.toast.add({ description: 'Registered successfully.'});
+            this.toast.add({ description: 'Registered successfully.' });
             if (this.passphraseCache) {
                 this.passphrase = this.passphraseCache;
                 this.enterRoom();
@@ -131,7 +134,7 @@ export default {
         handleLogin(userData) {
             this.showLogin = false;
             this.startSession(userData.id, userData.name, userData.email);
-            this.toast.add({ description: 'Logged in successfully.'});
+            this.toast.add({ description: 'Logged in successfully.' });
             if (this.passphraseCache) {
                 this.passphrase = this.passphraseCache;
                 this.enterRoom();
