@@ -21,15 +21,6 @@ export default defineEventHandler(async (event) => {
         userId = (decoded as jwt.JwtPayload).id;
     });
 
-    const usersDb = useDatabase("users");
-    const userResult = await usersDb.sql`SELECT * FROM accounts WHERE id = ${userId}`;
-    const userRows = userResult?.rows ?? [];
-
-    if (userRows.length === 0) {
-        return { code: 404, message: 'Not Found' };
-    }
-
-    const user = userRows[0];
     const secret = useRuntimeConfig().jwtSecret;
     let decoded;
     try {
@@ -39,6 +30,7 @@ export default defineEventHandler(async (event) => {
         return { code: 403, message: 'Forbidden' };
     }
 
+    const usersDb = useDatabase("users");
     // need to check if the user is allowed to view this match
     const unlockResult = await usersDb.sql`SELECT * FROM unlocks WHERE roomId = ${id} AND userId = ${userId}`;
     const unlockRows = unlockResult?.rows ?? [];
