@@ -1,14 +1,20 @@
 <template>
-    <UContainer class="flex flex-col bg-gray-900 rounded-xl items-center justify-between h-80 w-80 px-12 py-4">
-        <slot />
-        <h2 class="text-2xl mb-2">Create your<br>AllChat account</h2>
+    <UContainer
+        class="flex flex-col relative bg-gray-100 dark:bg-gray-950/90 rounded-xl items-center justify-between w-80 px-12 py-8">
+        <UButton class="absolute top-2 right-2" @click="$emit('close')" variant="link" icon="i-heroicons-x-mark" />
+        <h2 class="text-2xl mb-4">Create your<br>AllChat account</h2>
         <div class="flex flex-col space-y-4">
             <UInput v-model="username" placeholder="Username" @input="errorMsg = ''" />
             <UInput v-model="email" placeholder="Email" @input="errorMsg = ''" />
-            <UInput v-model="password" placeholder="Password" type="password" @keyup.enter="sendRegister" @input="errorMsg = ''" />
+            <UInput v-model="password" placeholder="Password" type="password" @keyup.enter="sendRegister"
+                @input="errorMsg = ''" />
         </div>
-        <UButton @click="sendRegister" :loading="loadingRequest" loading-icon="i-mdi-loading" class="mt-4 mb-2">Register</UButton>
-        <p class="text-red-600">{{ errorMsg }}</p>
+        <UButton @click="sendRegister" :loading="loadingRequest" loading-icon="i-mdi-loading" :data-error="errorMsg"
+            class="data-[error='']:my-4">Register
+        </UButton>
+        <p class="text-red-600 text-center my-2">{{ errorMsg }}</p>
+        <UButton class="text-primary-500 hover:text-primary-800 absolute bottom-2 cursor-pointer"
+            @click="$emit('hasAcc')" variant="link">Already have an account?</UButton>
     </UContainer>
 </template>
 

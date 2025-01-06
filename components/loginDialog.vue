@@ -1,13 +1,18 @@
 <template>
-    <UContainer class="flex flex-col bg-gray-900 rounded-xl items-center justify-between h-80 w-80 px-12 py-4">
-        <slot />
+    <UContainer
+        class="flex flex-col relative bg-gray-100 dark:bg-gray-950/90 rounded-xl items-center justify-between w-80 px-12 py-8">
+        <UButton class="absolute top-2 right-2" @click="$emit('close')" variant="link" icon="i-heroicons-x-mark" />
         <h2 class="text-2xl">Login to AllChat</h2>
-        <div class="flex flex-col space-y-4">
+        <div class="flex flex-col my-4 space-y-4">
             <UInput v-model="username" placeholder="Username" @input="errorMsg = ''" />
-            <UInput v-model="password" placeholder="Password" type="password" @keyup.enter="sendLogin" @input="errorMsg = ''" />
+            <UInput v-model="password" placeholder="Password" type="password" @keyup.enter="sendLogin"
+                @input="errorMsg = ''" />
         </div>
-        <UButton @click="sendLogin" :loading="loadingRequest" loading-icon="i-mdi-loading" :data-error="errorMsg" class="data-[error='']:mb-4 mb-0">Login</UButton>
-        <p class="text-red-600">{{ errorMsg }}</p>
+        <UButton @click="sendLogin" :loading="loadingRequest" loading-icon="i-mdi-loading" :data-error="errorMsg"
+            class="data-[error='']:my-4">Login</UButton>
+        <p class="text-red-600 text-center my-2">{{ errorMsg }}</p>
+        <UButton class="text-primary-500 hover:text-primary-800 cursor-pointer absolute bottom-2"
+            @click="$emit('noAcc')" variant="link">Don't have an account?</UButton>
     </UContainer>
 </template>
 
