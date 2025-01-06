@@ -8,7 +8,7 @@
             </UButton>
         </div>
         <div v-if="!loadRoom"
-            class="mt-6 flex flex-col items-center justify-center bg-zinc-900 p-8 rounded-xl ring ring-primary-500 w-fit mx-auto">
+            class="mt-6 flex flex-col items-center justify-center bg-zinc-900 p-8 rounded-xl ring-1 ring-primary-500 w-fit mx-auto">
             <h2 class="text-2xl w-fit mx-auto">enter passphrase:</h2>
             <UInput size="lg" v-model.trim="passphrase" @keydown="inputKeydown($event)" placeholder="Secret_room_2137"
                 class="w-72 mx-auto mt-4 caret-primary" @keyup.enter="enterRoom" maxlength="32"
