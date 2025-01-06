@@ -26,5 +26,9 @@ export default defineEventHandler(async (event) => {
         await db.sql`DROP TABLE IF EXISTS unlocks`;
         await db.sql`CREATE TABLE IF NOT EXISTS unlocks ("id" TEXT PRIMARY KEY, "userId" TEXT NOT NULL, "roomId" TEXT NOT NULL, "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`;
         return new Response('Table "unlocks" created');
+    } else if (table === 'leaderboard') {
+        await db.sql`DROP TABLE IF EXISTS leaderboard`;
+        await db.sql`CREATE TABLE IF NOT EXISTS leaderboard ("id" TEXT PRIMARY KEY, "mostMessages" TEXT, "mostDiscoveredRooms" TEXT, "mostJoinedRooms" TEXT, "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`;
+        return new Response('Table "leaderboard" created');
     }
 });

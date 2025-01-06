@@ -31,7 +31,7 @@
         <UContainer>
             <slot />
         </UContainer>
-        <footer class="bg-gray-900 text-gray-400 text-center p-4 bottom-0 absolute w-full">
+        <footer class="bg-gray-900 text-gray-400 text-center p-4 bottom-0 fixed w-full">
             <p class="text-xs">&copy; {{ currentYear }} AllChat</p>
         </footer>
     </div>
@@ -44,7 +44,7 @@ export default {
             links: [
                 [{ label: 'AllChat', to: '/' }],
                 [
-                    { label: 'Settings', to: '/settings', icon: 'i-heroicons-cog' },
+                    { label: 'Leaderboard', to: '/leaderboard', icon: 'i-mdi-trophy' },
                     { label: 'About', to: '/about', icon: 'i-heroicons-information-circle' },
                 ]
             ],
@@ -64,32 +64,31 @@ export default {
                 label: 'Account',
                 slot: 'account',
                 disabled: true,
-            },
-            ],
+            }],
             [
                 {
                     label: 'Profile',
                     icon: 'i-mdi-account',
                     to: '/profile',
-                    shortcuts: ['P'],
-                }
-                , {
-                    label: 'Logout',
-                    icon: 'i-mdi-logout',
-                    shortcuts: ['L'],
-                    click: () => logout(),
-                }
-            ],
-            [
+                },
                 {
                     label: 'Change Notes',
                     icon: 'i-mdi-clipboard-text',
-                    shortcuts: ['C'],
                     click: () => {
                         console.log('Change notes');
                     }
+                },
+                {
+                    label: 'Settings',
+                    to: '/settings',
+                    icon: 'i-heroicons-cog',
                 }
             ],
+            [{
+                label: 'Logout',
+                icon: 'i-mdi-logout',
+                click: () => logout(),
+            }],
         ]
 
         useHead({
