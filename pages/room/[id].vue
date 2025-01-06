@@ -9,21 +9,34 @@
         </div>
         <div
             class="px-4 w-11/12 md:w-4/5 lg:w-3/5 max-w-auto py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg h-[70vh] shadow-lg ">
-            <!-- chat history -->
             <div ref="messagesContainer" class="overflow-y-auto h-full flex flex-col gap-4 px-2">
-                <div v-if="Object.keys(discover).length > 0 && messages.length > 0" class="text-center text-gray-500 text-sm">
+                <div v-if="Object.keys(discover).length > 0 && messages.length > 0"
+                    class="text-center text-gray-500 text-sm">
                     <p>Room discovered by {{ discover.username }} at {{ discover.discoveredAt }}</p>
                 </div>
-                <div v-if="messages.length > 0" v-for="msg in messages" :key="msg.sender.id + msg.content"
-                    :class="user.id === msg.sender.id ? 'self-end text-end' : ''" class="flex flex-col gap-1 w-fit">
-                    <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
-                        class="flex gap-2 items-center" @click="openMiniProfile(msg.sender)">
-                        <UAvatar :src="'https://i.pravatar.cc/32?u=' + msg.sender.id" />
-                        <span class="font-bold w-fit">{{ msg.sender.name }}</span>
-                    </div>
-                    <p :class="user.id === msg.sender.id ? 'mr-6' : ''" class="ml-6 mr-0 break-all">
-                        {{ msg.content }}
-                    </p>
+                <div v-if="messages.length > 0" class="flex flex-col gap-4">
+                    <template v-for="(msg, index) in messages" :key="msg.sender.id + msg.content">
+                        <div v-if="shouldShowDateDivider(index)" class="text-center text-gray-500 text-sm">
+                            <UDivider class="text-gray-500">{{ formatDateDivider(messages[index].createdAt) }}
+                            </UDivider>
+                        </div>
+                        <div :class="user.id === msg.sender.id ? 'self-end text-end' : ''"
+                            class="flex flex-col gap-1 w-fit">
+                            <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
+                                class="flex gap-2 items-center" @click="openMiniProfile(msg.sender)">
+                                <UAvatar :src="'https://i.pravatar.cc/32?u=' + msg.sender.id" class="cursor-pointer" />
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-gray-500 w-fit" @click.stop>{{ toLocaleDate(msg.createdAt) }}</span>
+                                    <span :class="user.id === msg.sender.id ? 'self-end' : ''" class="font-bold w-fit cursor-pointer">
+                                        {{ msg.sender.name }}
+                                    </span>
+                                </div>
+                            </div>
+                            <p :class="user.id === msg.sender.id ? 'mr-10' : ''" class="ml-10 mr-0 break-all">
+                                {{ msg.content }}
+                            </p>
+                        </div>
+                    </template>
                 </div>
                 <div v-else class="text-center text-gray-500">
                     No messages yet.<br>
@@ -134,8 +147,8 @@ export default {
                 toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
             } else {
                 if (data.value.code === 200) {
-                messages.value = data.value.messages;
-                discover.value = data.value.discover;
+                    messages.value = data.value.messages;
+                    discover.value = data.value.discover;
                 } else {
                     throw showError({
                         statusCode: data.value.code,
@@ -165,13 +178,14 @@ export default {
             console.error('Failed to connect to chat:', error);
             this.toast.add({ title: 'Error', description: error, color: 'red' });
         }
-
+        this.$refs.messagesContainer.addEventListener('scroll', this.handleScroll);
         this.scrollToBottom();
     },
     beforeUnmount() {
         if (this.ws) {
             this.ws.close();
         }
+        this.$refs.messagesContainer.removeEventListener('scroll', this.handleScroll);
     },
     methods: {
         async connect() {
@@ -224,6 +238,10 @@ export default {
         },
         sendMessage() {
             if (this.message.trim() === '') return;
+            if (this.message.trim().length === 0 || this.message.trim().match(/^[\u200B\s]+$/)) {
+                this.message = '';
+                return;
+            }
             if (this.message.length > 0) {
                 if (!this.rateLimiter.tryRemoveTokens(1)) {
                     this.rateLimited = true;
@@ -280,7 +298,43 @@ export default {
             });
         },
         showNewMessageToast() {
-            this.newMessages++;
+            const container = this.$refs.messagesContainer;
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
+                this.newMessages = 0;
+            } else {
+                this.newMessages++;
+            }
+        },
+        handleScroll() {
+            const container = this.$refs.messagesContainer;
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
+                this.newMessages = 0;
+            }
+        },
+        toLocaleDate(date) {
+            // today at, yesterday at, or date at time (hh:mm)
+            const d = new Date(date);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            if (d.toDateString() === today.toDateString()) {
+                return 'Today at ' + d.toLocaleTimeString([], timeOptions);
+            } else if (d.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday at ' + d.toLocaleTimeString([], timeOptions);
+            } else {
+                return d.toLocaleDateString() + ' at ' + d.toLocaleTimeString([], timeOptions);
+            }
+        },
+        shouldShowDateDivider(index) {
+            if (index === 0) return true;
+            const currentMessageDate = new Date(this.messages[index].createdAt).toDateString();
+            const previousMessageDate = new Date(this.messages[index - 1].createdAt).toDateString();
+            return currentMessageDate !== previousMessageDate;
+        },
+        formatDateDivider(date) {
+            const d = new Date(date);
+            return d.toLocaleDateString();
         },
     },
 }
