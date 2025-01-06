@@ -17,15 +17,11 @@ export default defineEventHandler(async (event) => {
     if (!db) {
         return { code: 500, message: 'Database not available', status: 'error' };
     }
-    const result = await db.sql`SELECT rooms FROM accounts WHERE id = ${(decoded as JwtPayload).id}`;
+    const result = await db.sql`SELECT id FROM unlocks WHERE userId = ${(decoded as JwtPayload).id} AND roomId = ${getRouterParam(event, 'id')}`;
     const rows = result?.rows ?? [];
     if (rows.length === 0) {
         return { code: 404, message: 'Player not found', status: 'error' };
-    }
-    const player = rows[0];
-    const room = getQuery(event).room;
-    if ((player.rooms as string).split(' ').includes(room as string)) {
+    } else {
         return { code: 200, message: 'Player allowed', status: 'success' };
     }
-    return { code: 403, message: 'Forbidden', status: 'success' };
 });

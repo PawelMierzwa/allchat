@@ -123,7 +123,7 @@ export default {
         const toast = useToast();
 
         definePageMeta({
-            middleware: 'auth',
+            middleware: ['auth', 'unlocked'],
         })
 
         async function fetchRoomHistory() {
@@ -133,8 +133,15 @@ export default {
                 const toast = useToast();
                 toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
             } else {
+                if (data.value.code === 200) {
                 messages.value = data.value.messages;
                 discover.value = data.value.discover;
+                } else {
+                    throw showError({
+                        statusCode: data.value.code,
+                        statusMessage: data.value.message
+                    });
+                }
             }
         }
 

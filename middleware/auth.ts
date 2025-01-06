@@ -6,7 +6,7 @@ interface UserData {
     }
 }
 
-export default defineNuxtRouteMiddleware(async () => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
     if (!useSessionStore().user) {
         const { data }: { data: UserData } = await useFetch('/api/account/auth');
         if (data.value) {
@@ -17,7 +17,9 @@ export default defineNuxtRouteMiddleware(async () => {
             }
             useSessionStore().login(user);
         } else {
-            console.log('Not authenticated');
+            if (to.path !== '/') {
+                return navigateTo('/');
+            }
         }
     }
 });
