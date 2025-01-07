@@ -18,8 +18,8 @@ export default defineEventHandler(async (event) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return { status: 400, message: "Invalid email" };
     }
-    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
-        return { status: 400, message: "Password must be at least 8 characters and contain at least one letter and one number" };
+    if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+        return { status: 400, message: "Password must be at least 8 characters and contain at least one letter, one number, and one special character" };
     }
 
     const result = await db.sql`SELECT id FROM accounts WHERE username = ${username}`;
