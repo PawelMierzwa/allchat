@@ -10,7 +10,7 @@
                 </div>
             </div>
             <UDivider class="my-4 w-1/2" />
-            <div v-if="data.stats" class="flex flex-col items-center justify-between p-4 bg-gray-900 rounded-md">
+            <div v-if="data.stats" class="flex flex-col items-center justify-between p-4 bg-gray-100 dark:bg-gray-900 rounded-md">
                 <h3 class="text-xl">Stats</h3>
                 <table class="[&>*>tr>td]:p-2 w-full h-full">
                     <tbody>

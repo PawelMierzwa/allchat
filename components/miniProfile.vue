@@ -17,8 +17,13 @@ const { data } = await useFetch(`/api/user/${user.value.id}/stats?room=${room.va
 </script>
 
 <template>
-    <UContainer class="flex flex-col items-center justify-center gap-4 h-52 w-80 px-12 py-4 bg-gray-100 dark:bg-gray-950/90 rounded-xl">
-        <h2 class="self-start font-bold">{{ user.name }}</h2>
+    <UContainer class="flex flex-col items-center justify-center relative gap-4 h-52 w-80 px-12 py-4 bg-gray-100 dark:bg-gray-950/90 rounded-xl">
+        <div class="flex flex-row items-center justify-between w-full gap-4">
+            <h2 class="self-start font-bold">{{ user.name }}</h2>
+            <NuxtLink color="gray" class="flex items-center justify-center" :to="'/user/' + user.id">
+                <UIcon name="i-mdi-account" />
+            </NuxtLink>
+        </div>
         <table v-if="data.stats" class="[&>*>tr>td]:px-2">
             <tbody>
                 <tr>

@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
         const messageRows = messages?.rows ?? [];
         const messageUsers = await Promise.all(messageRows.map(async (row: any) => {
             const user = await userDb.sql`SELECT * FROM accounts WHERE id = ${row.userId}`;
-            return user?.rows ? { username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
+            return user?.rows ? { id: row.userId, username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
         }));
 
         // top 10 users with the most discovered rooms
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
         const discoveredRows = discoveredRooms?.rows ?? [];
         const discoveredUsers = await Promise.all(discoveredRows.map(async (row: any) => {
             const user = await userDb.sql`SELECT * FROM accounts WHERE id = ${row.discoveredBy}`;
-            return user?.rows ? { username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
+            return user?.rows ? { id: row.userId, username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
         }));
 
         // top 10 users with the most joined rooms
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
         const joinedRows = joinedRooms?.rows ?? [];
         const joinedUsers = await Promise.all(joinedRows.map(async (row: any) => {
             const user = await userDb.sql`SELECT * FROM accounts WHERE id = ${row.userId}`;
-            return user?.rows ? { username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
+            return user?.rows ? { id: row.userId, username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
         }));
 
         await userDb.sql`INSERT INTO leaderboard (mostMessages, mostDiscoveredRooms, mostJoinedRooms) VALUES (${JSON.stringify(messageUsers)}, ${JSON.stringify(discoveredUsers)}, ${JSON.stringify(joinedUsers)})`;

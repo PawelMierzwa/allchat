@@ -97,12 +97,24 @@ export default defineEventHandler(async (event) => {
                 return { code: 400, message: 'Bad Request' };
         }
     } else {
-        stats = {
-            totalMessages: messages.length,
-            totalRoomMessages: roomMessages.length,
-            totalRoomsJoined: roomsJoined.length,
-            totalRoomsDiscovered: roomsDiscovered.length
-        };
+        if (query.room) {
+            stats = {
+                totalMessages: messages.length,
+                totalRoomMessages: roomMessages.length,
+                totalRoomsJoined: roomsJoined.length,
+                totalRoomsDiscovered: roomsDiscovered.length
+            };
+
+            return { code: 200, stats };
+        } else {
+            const username = messages[0].username,
+            stats = {
+                totalMessages: messages.length,
+                totalRoomsJoined: roomsJoined.length,
+                totalRoomsDiscovered: roomsDiscovered.length
+            };
+            return { code: 200, username, stats };
+        }
     }
 
     return { code: 200, stats };
