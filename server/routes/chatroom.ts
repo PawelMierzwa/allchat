@@ -43,7 +43,7 @@ export default defineWebSocketHandler({
     },
     async message(peer, message) {
         try {
-            const { action, room_id, content, sender } = JSON.parse(message.toString());
+            const { action, room_id, id: msgId, content, sender, createdAt } = JSON.parse(message.toString());
             const clientId = peer.id;
             const client = clients.get(clientId);
 
@@ -101,7 +101,6 @@ export default defineWebSocketHandler({
                     const db = useDatabase("chat");
                     if (db) {
                         try {
-                            const msgId = uuidv4();
                             await db.sql`INSERT INTO messages (id, roomId, userId, username, message) VALUES (${msgId}, ${currentRoom}, ${sender.id}, ${sender.name}, ${content})`;
                         } catch (err) {
                             console.error('Error sending message:', err);
@@ -111,7 +110,7 @@ export default defineWebSocketHandler({
                         if (otherClientId !== clientId) {
                             const recipient = clients.get(otherClientId);
                             if (recipient) {
-                                recipient.peer.send(JSON.stringify({ content, sender }));
+                                recipient.peer.send(JSON.stringify({ id: msgId, content, sender, createdAt }));
                             }
                         }
                     });

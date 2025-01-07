@@ -1,6 +1,6 @@
 <template>
-    <UContainer class="flex flex-col items-center justify-center font-mono">
-        <div class="w-11/12 md:w-4/5 lg:w-3/5 items-center relative justify-center flex gap-4">
+    <UContainer class="flex flex-col px-0 items-center justify-center font-mono">
+        <div class="w-full md:w-4/5 lg:w-3/5 items-center relative justify-center flex gap-4">
             <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
             <div class="absolute flex items-center right-0">
                 <UButton @click="showRoomStats = true" size="sm" class="w-8 h-8" color="gray" icon="i-mdi-chart-bar"
@@ -8,33 +8,46 @@
             </div>
         </div>
         <div
-            class="px-4 w-11/12 md:w-4/5 lg:w-3/5 max-w-auto py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg h-[70vh] shadow-lg ">
-            <div ref="messagesContainer" class="overflow-y-auto h-full flex flex-col gap-4 px-2">
+            class="px-2 md:px-4 w-auto md:mx-0 md:w-4/5 lg:w-3/5 max-w-auto py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg h-[75vh] shadow-lg ">
+            <div ref="messagesContainer" class="overflow-y-auto overflow-x-hidden h-full flex flex-col gap-4 px-2">
                 <div v-if="Object.keys(discover).length > 0 && messages.length > 0"
                     class="text-center text-gray-500 text-sm">
                     <p>Room discovered by {{ discover.username }} at {{ discover.discoveredAt }}</p>
                 </div>
                 <div v-if="messages.length > 0" class="flex flex-col gap-4">
-                    <template v-for="(msg, index) in messages" :key="msg.sender.id + msg.content">
+                    <template v-for="(msg, index) in messages" :key="msg.id" class="w-full">
                         <div v-if="shouldShowDateDivider(index)" class="text-center text-gray-500 text-sm">
-                            <UDivider class="text-gray-500">{{ formatDateDivider(messages[index].createdAt) }}
-                            </UDivider>
+                            <UDivider :label="formatDateDivider(messages[index].createdAt)" class="text-gray-500"
+                                :ui="{ label: 'text-gray-500 dark:text-gray-600' }" />
                         </div>
                         <div :class="user.id === msg.sender.id ? 'self-end text-end' : ''"
                             class="flex flex-col gap-1 w-fit">
                             <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
-                                class="flex gap-2 items-center" @click="openMiniProfile(msg.sender)">
+                                class="flex gap-2 items-center" title="Show profile" @click="openMiniProfile(msg.sender)">
                                 <UAvatar :src="'https://i.pravatar.cc/32?u=' + msg.sender.id" class="cursor-pointer" />
                                 <div class="flex flex-col">
-                                    <span class="text-xs text-gray-500 w-fit" @click.stop>{{ toLocaleDate(msg.createdAt) }}</span>
-                                    <span :class="user.id === msg.sender.id ? 'self-end' : ''" class="font-bold w-fit cursor-pointer">
+                                    <span class="text-xs text-gray-500 w-fit" title="" @click.stop>
+                                        {{ toLocaleDate(msg.createdAt) }}
+                                    </span>
+                                    <span :class="user.id === msg.sender.id ? 'self-end' : ''"
+                                        class="font-bold w-fit cursor-pointer">
                                         {{ msg.sender.name }}
                                     </span>
                                 </div>
                             </div>
-                            <p :class="user.id === msg.sender.id ? 'mr-10' : ''" class="ml-10 mr-0 break-all">
-                                {{ msg.content }}
-                            </p>
+                            <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
+                                class="flex gap-2 items-center group" @mouseover="msgHovered = index"
+                                @mouseleave="msgHovered = null">
+                                <div v-if="isReplyMsg(msg.content).originalMsg">
+                                    <ReplyMessage :msg="msg" :user="user" :reply-msg="isReplyMsg(msg.content)" @goto="gotoMsg" />
+                                </div>
+                                <p v-else :class="user.id === msg.sender.id ? 'mr-10' : 'ml-10'"
+                                    class="whitespace-pre-wrap hybrid-break">
+                                    {{ msg.content }}
+                                </p>
+                                <UButton v-if="msgHovered === index" :padded="false" @click="setReplyTo(msg)" size="sm"
+                                    class="w-6 h-6" color="gray" icon="i-mdi-reply" title="Reply to this message" variant="link" />
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -52,8 +65,15 @@
                 You're sending messages too fast!<br>
                 Please wait a moment before sending another message.
             </div>
+            <div v-if="replyTo"
+                class="flex flex-row content-center items-center gap-2 p-2 text-sm bg-gray-100 dark:bg-gray-950/90 rounded-xl">
+                <p class="font-bold">Replying to {{ replyTo.sender.name }}:</p>
+                <p>{{ replyTo.content }}</p>
+                <UButton @click="replyTo = null" color="gray" size="xs" class="text-xs self-end" variant="link"
+                    icon="i-heroicons-x-mark-16-solid" :padded="false" />
+            </div>
             <UInput v-model="message" placeholder="Type a message..." @keyup.enter="sendMessage"
-                :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256" class="w-full mt-auto">
+                :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256" class="w-full">
                 <template #trailing>
                     <UButton color="gray" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
                 </template>
@@ -82,6 +102,8 @@
 </template>
 
 <script>
+import { v4 as uuidv4 } from 'uuid';
+
 class RateLimiter {
     constructor(refillRate, capacity) {
         this.tokens = capacity;
@@ -125,6 +147,8 @@ export default {
             rateLimiter: new RateLimiter(0.5, 4),
             rateLimited: false,
             showRoomStats: false,
+            replyTo: null,
+            msgHovered: null,
         }
     },
     setup() {
@@ -168,6 +192,7 @@ export default {
             this.toast.add({ title: 'Error', description: error, color: 'red' });
             console.error('Failed to fetch room history:', error);
         }
+
         return { user, messages, toast, discover };
     },
     mounted() {
@@ -221,8 +246,10 @@ export default {
                     console.log(`[${messageData.sender}] ${messageData.content}`);
                     // Update chat history
                     this.messages.push({
+                        id: messageData.id,
                         sender: messageData.sender,
                         content: messageData.content,
+                        createdAt: messageData.createdAt,
                     });
                     this.showNewMessageToast();
 
@@ -236,11 +263,19 @@ export default {
                 }
             });
         },
+        setReplyTo(msg) {
+            this.replyTo = msg;
+        },
         sendMessage() {
             if (this.message.trim() === '') return;
             if (this.message.trim().length === 0 || this.message.trim().match(/^[\u200B\s]+$/)) {
                 this.message = '';
                 return;
+            }
+            let content = this.message;
+            if (this.replyTo) {
+                content = `<r:${this.replyTo.id}> ${content.trim()}`;
+                this.replyTo = null;
             }
             if (this.message.length > 0) {
                 if (!this.rateLimiter.tryRemoveTokens(1)) {
@@ -250,24 +285,21 @@ export default {
                     return;
                 }
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                    this.ws.send(JSON.stringify({
+                    const msgId = uuidv4();
+                    const messageData = {
                         action: 'message',
                         room_id: this.gameId,
-                        content: this.message,
+                        id: msgId,
+                        content: content,
                         sender: {
                             id: this.user.id,
                             name: this.user.name,
                         },
-                    }));
+                        createdAt: new Date().toISOString()
+                    };
+                    this.ws.send(JSON.stringify(messageData));
                     this.rateLimited = false;
-                    // Update local chat history
-                    this.messages.push({
-                        sender: {
-                            id: this.user.id,
-                            name: this.user.name,
-                        },
-                        content: this.message,
-                    });
+                    this.messages.push(messageData);
                     this.message = '';
                     this.scrollToBottom();
                 } else {
@@ -336,6 +368,32 @@ export default {
             const d = new Date(date);
             return d.toLocaleDateString();
         },
+        isReplyMsg(msg) {
+            const replyTagRegex = /<r:([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})>/g;
+            const match = replyTagRegex.exec(msg);
+            if (match) {
+                const originalMsg = this.messages.find(m => m.id === match[1]);
+                return {
+                    content: msg.replace(replyTagRegex, '').trim(),
+                    originalMsg: originalMsg || null
+                };
+            }
+            return { content: msg, originalMsg: null };
+        },
+        gotoMsg(msgId) {
+            const index = this.messages.findIndex(m => m.id === msgId);
+            if (index !== -1) {
+                this.$refs.messagesContainer.children[index].scrollIntoView({ behavior: 'smooth' });
+            }
+        },
     },
 }
 </script>
+
+
+<style scoped>
+.hybrid-break {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+</style>

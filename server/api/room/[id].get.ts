@@ -67,6 +67,7 @@ export default defineEventHandler(async (event) => {
     // format the messages to: { sender: { id: string, name: string }, content: string, createdAt: string }
     messages.rows = messages.rows?.map((msg: any) => {
         return {
+            id: msg.id,
             sender: { id: msg.userId, name: msg.username },
             content: msg.message,
             createdAt: msg.createdAt
