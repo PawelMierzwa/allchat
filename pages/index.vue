@@ -2,13 +2,13 @@
     <UContainer class="pt-8 font-mono">
         <div class="mx-auto flex flex-col items-center justify-center w-fit">
             <h1 class="text-7xl font-bold w-fit mt-32">AllChat</h1>
-            <UButton class="dark:text-gray-500 text-xs self-end w-fit" @click="showRules = true" color="gray"
+            <UButton class="dark:text-gray-500 text-xs pt-0 self-end w-fit" @click="showRules = true" color="gray"
                 variant="link">
                 What's this?
             </UButton>
         </div>
         <div v-if="!loadRoom"
-            class="mt-6 flex flex-col items-center justify-center bg-zinc-900 p-8 rounded-xl ring-1 ring-primary-500 w-fit mx-auto">
+            class="mt-6 flex flex-col items-center justify-center bg-gray-100 dark:bg-zinc-900 p-8 rounded-xl ring-1 ring-primary-500 w-fit mx-auto">
             <h2 class="text-2xl w-fit mx-auto">enter passphrase:</h2>
             <UInput size="lg" v-model.trim="passphrase" @keydown="inputKeydown($event)" placeholder="Secret_room_2137"
                 class="w-72 mx-auto mt-4 caret-primary" @keyup.enter="enterRoom" maxlength="32"
@@ -18,10 +18,10 @@
                         :padded="false" @click="enterRoom" />
                 </template>
             </UInput>
-            <a class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
-                @click="showLogin = true" v-if="!isAuthenticated">
+            <UButton class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
+                @click="showLogin = true" v-if="!isAuthenticated" variant="link">
                 Login to join a room
-            </a>
+            </UButton>
         </div>
         <div class="mx-auto mt-8 flex flex-col items-center justify-center" v-else>
             <h2 class="text-3xl">Loading room...</h2>
