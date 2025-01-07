@@ -36,6 +36,8 @@
             <p>Loading room stats...</p>
             <UIcon name="i-mdi-loading" class="animate-spin" />
         </div>
+        <UButton @click="$emit('close')" class="text-gray-100 hover:text-gray-300 dark:text-gray-400" color="gray"
+            variant="link">Close</UButton>
     </div>
 </template>
 

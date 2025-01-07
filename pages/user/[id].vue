@@ -1,7 +1,8 @@
 <template>
     <UContainer class="flex flex-col items-center justify-between pt-32 md:p-32">
-        <h1 class="text-5xl">{{ data.username ? data.username + "'s" : 'Users' }} profile</h1>
-        <div class="flex flex-col items-center justify-between mt-10 w-full">
+        <h1 class="text-5xl" v-if="data">{{ data.username + "'s" }} profile</h1>
+        <h1 class="text-5xl" v-else>Loading...</h1>
+        <div class="flex flex-col items-center justify-between mt-10 w-full" v-if="data">
             <div class="flex items-center gap-4">
                 <UAvatar :src="'https://i.pravatar.cc/64?u=' + id" size="lg" />
                 <div>
@@ -32,6 +33,9 @@
                 <p>Error fetching user data</p>
                 <p class="text-red-300">{{ data.code }}, {{ data.message }}</p>
             </div>
+        </div>
+        <div v-else>
+            <UIcon name="i-mdi-loading" class="animate-spin text-4xl mx-auto mt-8" />
         </div>
     </UContainer>
 </template>

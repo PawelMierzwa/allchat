@@ -8,7 +8,7 @@
             </div>
         </div>
         <div
-            class="px-2 md:px-4 w-full py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg shadow-lg ">
+            class="px-2 md:px-4 w-full py-6 relative bg-gray-100 dark:bg-gray-900 h-[70vh] flex flex-col gap-4 rounded-lg shadow-lg ">
             <div ref="messagesContainer" class="overflow-y-auto overflow-x-hidden h-full flex flex-col gap-4 px-2">
                 <div v-if="Object.keys(discover).length > 0 && messages.length > 0"
                     class="text-center text-gray-500 text-sm">
@@ -23,7 +23,8 @@
                         <div :class="user.id === msg.sender.id ? 'self-end text-end' : ''"
                             class="flex flex-col gap-1 w-fit">
                             <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
-                                class="flex gap-2 items-center" title="Show profile" @click="openMiniProfile(msg.sender)">
+                                class="flex gap-2 items-center" title="Show profile"
+                                @click="openMiniProfile(msg.sender)">
                                 <UAvatar :src="'https://i.pravatar.cc/32?u=' + msg.sender.id" class="cursor-pointer" />
                                 <div class="flex flex-col">
                                     <span class="text-xs text-gray-500 w-fit" title="" @click.stop>
@@ -39,14 +40,16 @@
                                 class="flex gap-2 items-center group" @mouseover="msgHovered = index"
                                 @mouseleave="msgHovered = null">
                                 <div v-if="isReplyMsg(msg.content).originalMsg">
-                                    <ReplyMessage :msg="msg" :user="user" :reply-msg="isReplyMsg(msg.content)" @goto="gotoMsg" />
+                                    <ReplyMessage :msg="msg" :user="user" :reply-msg="isReplyMsg(msg.content)"
+                                        @goto="gotoMsg" />
                                 </div>
                                 <p v-else :class="user.id === msg.sender.id ? 'mr-10' : 'ml-10'"
                                     class="whitespace-pre-wrap hybrid-break">
                                     {{ msg.content }}
                                 </p>
                                 <UButton v-if="msgHovered === index" :padded="false" @click="setReplyTo(msg)" size="sm"
-                                    class="w-6 h-6" color="gray" icon="i-mdi-reply" title="Reply to this message" variant="link" />
+                                    class="w-6 h-6" color="gray" icon="i-mdi-reply" title="Reply to this message"
+                                    variant="link" />
                             </div>
                         </div>
                     </template>
@@ -89,14 +92,28 @@
         <div v-else-if="selectedUser"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
             @click="selectedUser = null">
-            <MiniProfile :user="selectedUser" :room="$route.params.id" @click.stop />
-            <UButton @click="selectedUser = null" class="text-gray-100 hover:text-gray-300 dark:text-gray-400"
-                color="gray" variant="link">Close</UButton>
+            <Suspense>
+                <MiniProfile :user="selectedUser" :room="$route.params.id" @close="selectedUser = null" @click.stop />
+                <template #fallback>
+                    <div
+                        class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+                        <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
+                    </div>
+                </template>
+            </Suspense>
         </div>
         <div v-else-if="showRoomStats"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
             @click="showRoomStats = false">
-            <RoomStatsDialog :room="$route.params.id" :discover="discover" @click.stop />
+            <Suspense>
+                <RoomStatsDialog :room="$route.params.id" :discover="discover" @close="showRoomStats = false" @click.stop />
+                <template #fallback>
+                    <div
+                        class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+                        <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
+                    </div>
+                </template>
+            </Suspense>
         </div>
     </div>
 </template>

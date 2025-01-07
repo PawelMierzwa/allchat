@@ -13,12 +13,12 @@ const props = defineProps({
 const { user, room } = toRefs(props);
 
 const { data } = await useFetch(`/api/user/${user.value.id}/stats?room=${room.value}`);
-
 </script>
 
 <template>
-    <UContainer class="flex flex-col items-center justify-center relative gap-4 h-52 w-80 px-12 py-4 bg-gray-100 dark:bg-gray-950/90 rounded-xl">
-        <div class="flex flex-row items-center justify-between w-full gap-4">
+    <UContainer
+        class="flex flex-col items-center justify-center relative gap-4 w-80 px-12 py-4 bg-gray-100 dark:bg-gray-950/90 rounded-xl">
+        <div class="flex flex-row items-center justify-between w-full gap-4 p-2">
             <h2 class="self-start font-bold">{{ user.name }}</h2>
             <NuxtLink color="gray" class="flex items-center justify-center" :to="'/user/' + user.id">
                 <UIcon name="i-mdi-account" />
@@ -52,5 +52,7 @@ const { data } = await useFetch(`/api/user/${user.value.id}/stats?room=${room.va
             <p>Loading user data...</p>
             <UIcon name="i-mdi-loading" class="animate-spin" />
         </div>
+        <UButton @click="$emit('close')" class="text-gray-100 hover:text-gray-300 dark:text-gray-400" color="gray"
+            variant="link">Close</UButton>
     </UContainer>
 </template>
