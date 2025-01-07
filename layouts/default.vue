@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="flex flex-col relative overflow-x-hidden h-screen w-screen">
         <nav class="flex flex-row justify-between items-center px-4 bg-gray-900">
             <UHorizontalNavigation :links="links" class="p-2">
                 <template #default="{ link, isActive }">
@@ -28,10 +28,8 @@
                 </UDropdown>
             </ClientOnly>
         </nav>
-        <UContainer>
-            <slot />
-        </UContainer>
-        <footer class="bg-gray-900 text-gray-400 text-center p-4 bottom-0 fixed w-full">
+        <slot class="overflow-y-auto" />
+        <footer class="bg-gray-900 text-gray-400 text-center p-4 mt-auto w-full">
             <p class="text-xs">&copy; {{ currentYear }} AllChat</p>
         </footer>
     </div>

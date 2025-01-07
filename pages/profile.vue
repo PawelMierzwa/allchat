@@ -1,5 +1,5 @@
 <template>
-    <UContainer class="flex flex-col items-center justify-between pt-32 md:p-32">
+    <UContainer class="flex flex-col items-center justify-between my-auto">
         <h1 class="text-5xl">Your Profile</h1>
         <div class="flex flex-col items-center justify-between mt-10 w-full">
             <div class="flex items-center gap-4">

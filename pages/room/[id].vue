@@ -1,6 +1,6 @@
 <template>
-    <UContainer class="flex flex-col px-0 items-center justify-center font-mono">
-        <div class="w-full md:w-4/5 lg:w-3/5 items-center relative justify-center flex gap-4">
+    <div class="flex flex-col mx-auto px-0 items-center w-full md:w-4/5 lg:w-3/5 my-auto font-mono">
+        <div class="w-full items-center relative justify-center flex gap-4">
             <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
             <div class="absolute flex items-center right-0">
                 <UButton @click="showRoomStats = true" size="sm" class="w-8 h-8" color="gray" icon="i-mdi-chart-bar"
@@ -8,7 +8,7 @@
             </div>
         </div>
         <div
-            class="px-2 md:px-4 w-auto md:mx-0 md:w-4/5 lg:w-3/5 max-w-auto py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg h-[75vh] shadow-lg ">
+            class="px-2 md:px-4 w-full py-6 relative bg-gray-100 dark:bg-gray-900 flex flex-col gap-4 rounded-lg shadow-lg ">
             <div ref="messagesContainer" class="overflow-y-auto overflow-x-hidden h-full flex flex-col gap-4 px-2">
                 <div v-if="Object.keys(discover).length > 0 && messages.length > 0"
                     class="text-center text-gray-500 text-sm">
@@ -98,7 +98,7 @@
             @click="showRoomStats = false">
             <RoomStatsDialog :room="$route.params.id" :discover="discover" @click.stop />
         </div>
-    </UContainer>
+    </div>
 </template>
 
 <script>

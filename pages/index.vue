@@ -1,7 +1,7 @@
 `<template>
-    <UContainer class="pt-8 font-mono">
+    <UContainer class="my-auto pb-8 font-mono">
         <div class="mx-auto flex flex-col items-center justify-center w-fit">
-            <h1 class="text-7xl font-bold w-fit mt-32">AllChat</h1>
+            <h1 class="text-7xl font-bold w-fit">AllChat</h1>
             <UButton class="dark:text-gray-500 text-xs pt-0 self-end w-fit" @click="showRules = true" color="gray"
                 variant="link">
                 What's this?
