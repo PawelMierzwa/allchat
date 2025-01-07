@@ -1,14 +1,18 @@
 <template>
     <div class="flex flex-col items-center justify-between w-full gap-4">
         <h2 class="text-xl">{{ header }}</h2>
-        <ul
-            class="flex flex-col px-2 list-none items-center justify-between divide-y w-full overflow-y-auto dynamic-height divide-gray-600 divide-dashed">
-            <li v-for="(user, index) in leaderboardEntries" :key="index" @click="openProfile(user.id)"
-                class="flex flex-row items-center hover:bg-gray-500/70 transition justify-between w-full gap-4 p-2 cursor-pointer">
+        <ul v-if="leaderboardEntries.length > 0"
+            class="flex flex-col list-none items-center justify-between divide-y w-full overflow-y-auto divide-gray-600 divide-dashed shadow-xl bg-gray-100 dark:bg-gray-900 py-6 rounded-xl px-8">
+            <li v-for="(user, index) in leaderboardEntries" :key="index" :title="user.username + `'s profile`"
+                @click="openProfile(user)"
+                class="flex flex-row items-center rounded hover:bg-gray-400/70 hover:dark:bg-gray-800/70 transition justify-between w-full gap-4 p-2 cursor-pointer">
                 <p class="text-md">{{ user.username }}</p>
                 <p class="text-md">{{ user.count }}</p>
             </li>
         </ul>
+        <div v-else>
+            <USkeleton />
+        </div>
     </div>
 </template>
 
@@ -27,8 +31,8 @@ const props = defineProps({
 const { leaderboard: leaderboardEntries, header } = toRefs(props);
 
 const router = useRouter();
-const openProfile = function (id) {
-    router.push('/user/' + id);
+const openProfile = function (user) {
+    router.push('/user/' + user.id);
 }
 </script>
 
@@ -51,19 +55,14 @@ const openProfile = function (id) {
     background: theme('colors.orange.600');
 }
 
-ul.dynamic-height {
-    /* scrollbar-width: thin;
+ul {
+    scrollbar-width: thin;
     scrollbar-color: theme('colors.gray.600') theme('colors.gray.900');
-    scrollbar-arrow-color: theme('colors.gray.900'); */
+    scrollbar-arrow-color: theme('colors.gray.900');
+}
 
+ul.dynamic-height {
     max-height: 300px;
     overflow-y: auto;
 }
-
-@media screen and (max-height: 750px) {
-    ul.dynamic-height {
-        max-height: 240px;
-    }
-}
-
 </style>

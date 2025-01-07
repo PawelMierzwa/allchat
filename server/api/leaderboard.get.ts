@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
         const discoveredRows = discoveredRooms?.rows ?? [];
         const discoveredUsers = await Promise.all(discoveredRows.map(async (row: any) => {
             const user = await userDb.sql`SELECT * FROM accounts WHERE id = ${row.discoveredBy}`;
-            return user?.rows ? { id: row.userId, username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
+            return user?.rows ? { id: row.discoveredBy, username: user.rows[0].username, count: row.count } : { username: 'Unknown', count: row.count };
         }));
 
         // top 10 users with the most joined rooms
