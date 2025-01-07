@@ -1,75 +1,35 @@
-# Nuxt Minimal Starter
+# AllChat
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+AllChat is a secure and private chat application that allows users to have both private and public conversations using passphrases. Messages are encrypted, ensuring that only users with the correct passphrase can read them.
 
-## Setup
+## Features
 
-Make sure to install dependencies:
+- **Secure Messaging**: All messages are encrypted for privacy.
+- **Public and Private Rooms**: Create rooms that are either public or private.
+- **User Profiles**: View and interact with user profiles.
+- **Real-time Communication**: Messages are delivered in real-time using WebSockets.
+- **Rate Limiting**: Prevents users from sending messages too quickly.
 
-```bash
-# npm
-npm install
+## Technologies Used
 
-# pnpm
-pnpm install
+- **Nuxt.js**: A powerful framework for building server-side rendered applications.
+- **Vue.js**: The progressive JavaScript framework for building user interfaces.
+- **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
+- **WebSockets**: For real-time communication.
+- **SQLite**: A lightweight database for storing user and chat data.
+- **JWT**: JSON Web Tokens for secure authentication.
 
-# yarn
-yarn install
+## Contributing
 
-# bun
-bun install
-```
+Contributions are welcome! Please read the contributing guidelines first.
 
-## Development Server
+## Acknowledgements
 
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- [Nuxt.js](https://nuxtjs.org/)
+- [Vue.js](https://vuejs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [SQLite](https://www.sqlite.org/)
+- [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken)
+- [bcrypt](https://github.com/kelektiv/node.bcrypt.js)
+- [Material Design Icons](https://github.com/Templarian/MaterialDesign)
+- [Heroicons](https://github.com/tailwindlabs/heroicons)
