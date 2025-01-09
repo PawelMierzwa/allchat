@@ -70,7 +70,8 @@ export default defineEventHandler(async (event) => {
             id: msg.id,
             sender: { id: msg.userId, name: msg.username },
             content: msg.message,
-            createdAt: msg.createdAt
+            createdAt: msg.createdAt,
+            iv: msg.iv
         };
     });
 

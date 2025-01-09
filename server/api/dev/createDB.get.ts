@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
         return new Response('Table "rooms" created');
     } else if (table === 'messages') { // chat
         await db.sql`DROP TABLE IF EXISTS messages`;
-        await db.sql`CREATE TABLE IF NOT EXISTS messages ("id" TEXT PRIMARY KEY, "roomId" TEXT NOT NULL, "userId" TEXT NOT NULL, "username" TEXT NOT NULL, "message" TEXT NOT NULL, "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`;
+        await db.sql`CREATE TABLE IF NOT EXISTS messages ("id" TEXT PRIMARY KEY, "roomId" TEXT NOT NULL, "userId" TEXT NOT NULL, "username" TEXT NOT NULL, "message" TEXT NOT NULL, "iv" TEXT NOT NULL, "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`;
         return new Response('Table "messages" created');
     } else if (table === 'unlocks') { // users
         await db.sql`DROP TABLE IF EXISTS unlocks`;

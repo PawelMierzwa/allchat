@@ -106,7 +106,8 @@
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
             @click="showRoomStats = false">
             <Suspense>
-                <RoomStatsDialog :room="$route.params.id" :discover="discover" @close="showRoomStats = false" @click.stop />
+                <RoomStatsDialog :room="$route.params.id" :discover="discover" @close="showRoomStats = false"
+                    @click.stop />
                 <template #fallback>
                     <div
                         class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
@@ -188,7 +189,17 @@ export default {
                 toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
             } else {
                 if (data.value.code === 200) {
-                    messages.value = data.value.messages;
+                    const fetchedMessages = data.value.messages;
+                    const decryptedMessages = await Promise.all(fetchedMessages.map(async (msg) => {
+                        const encryptedData = Uint8Array.from(atob(msg.content), c => c.charCodeAt(0));
+                        const iv = Uint8Array.from(atob(msg.iv), c => c.charCodeAt(0));
+                        const decryptedContent = await decryptMessage(encryptedData, iv, route.params.id);
+                        return {
+                            ...msg,
+                            content: decryptedContent
+                        };
+                    }));
+                    messages.value = decryptedMessages;
                     discover.value = data.value.discover;
                 } else {
                     throw showError({
@@ -197,6 +208,51 @@ export default {
                     });
                 }
             }
+        }
+
+        async function hashKey(key) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(key);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return new Uint8Array(hash);
+        }
+
+        async function encryptMessage(message, key) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(message);
+            const hashedKey = await hashKey(key);
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                hashedKey,
+                { name: 'AES-GCM' },
+                false,
+                ['encrypt']
+            );
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encryptedData = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv },
+                cryptoKey,
+                data
+            );
+            return { iv, encryptedData };
+        }
+
+        async function decryptMessage(encryptedData, iv, key) {
+            const hashedKey = await hashKey(key);
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                hashedKey,
+                { name: 'AES-GCM' },
+                false,
+                ['decrypt']
+            );
+            const decryptedData = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                cryptoKey,
+                encryptedData
+            );
+            const decoder = new TextDecoder();
+            return decoder.decode(decryptedData);
         }
 
         useHead({
@@ -210,7 +266,7 @@ export default {
             console.error('Failed to fetch room history:', error);
         }
 
-        return { user, messages, toast, discover };
+        return { user, messages, toast, discover, encryptMessage, decryptMessage };
     },
     mounted() {
         this.gameId = this.$route.params.id;
@@ -260,16 +316,23 @@ export default {
                 const messageData = JSON.parse(data);
 
                 if (messageData.content && messageData.sender) {
-                    console.log(`[${messageData.sender}] ${messageData.content}`);
-                    // Update chat history
-                    this.messages.push({
-                        id: messageData.id,
-                        sender: messageData.sender,
-                        content: messageData.content,
-                        createdAt: messageData.createdAt,
-                    });
-                    this.showNewMessageToast();
-
+                    try {
+                        const encryptedData = Uint8Array.from(atob(messageData.content), c => c.charCodeAt(0));
+                        const iv = Uint8Array.from(atob(messageData.iv), c => c.charCodeAt(0));
+                        const decryptedContent = await this.decryptMessage(encryptedData, iv, this.gameId);
+                        // Update chat history with decrypted content
+                        this.messages.push({
+                            id: messageData.id,
+                            sender: messageData.sender,
+                            content: decryptedContent,
+                            createdAt: messageData.createdAt,
+                        });
+                        if (this.$refs.messagesContainer.scrollTop + this.$refs.messagesContainer.clientHeight >= this.$refs.messagesContainer.scrollHeight) {
+                            this.scrollToBottom();
+                        } else this.showNewMessageToast();
+                    } catch (error) {
+                        console.error("Failed to decrypt message:", error);
+                    }
                 } else if (messageData.status === 'joined') {
                     console.log(`Joined room ${messageData.room_id}`);
                 } else if (messageData.status === 'left') {
@@ -283,7 +346,7 @@ export default {
         setReplyTo(msg) {
             this.replyTo = msg;
         },
-        sendMessage() {
+        async sendMessage() {
             if (this.message.trim() === '') return;
             if (this.message.trim().length === 0 || this.message.trim().match(/^[\u200B\s]+$/)) {
                 this.message = '';
@@ -303,11 +366,13 @@ export default {
                 }
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                     const msgId = uuidv4();
+                    const { iv, encryptedData } = await this.encryptMessage(content, this.gameId);
                     const messageData = {
                         action: 'message',
                         room_id: this.gameId,
                         id: msgId,
-                        content: content,
+                        content: btoa(String.fromCharCode(...new Uint8Array(encryptedData))),
+                        iv: btoa(String.fromCharCode(...iv)),
                         sender: {
                             id: this.user.id,
                             name: this.user.name,
@@ -316,11 +381,20 @@ export default {
                     };
                     this.ws.send(JSON.stringify(messageData));
                     this.rateLimited = false;
-                    this.messages.push(messageData);
+                    this.messages.push({
+                        id: msgId,
+                        sender: {
+                            id: this.user.id,
+                            name: this.user.name,
+                        },
+                        content: content,
+                        createdAt: new Date().toISOString()
+                    });
                     this.message = '';
                     this.scrollToBottom();
                 } else {
                     console.error('WebSocket is not connected.');
+                    this.wsDisconnected = true;
                 }
             }
         },
