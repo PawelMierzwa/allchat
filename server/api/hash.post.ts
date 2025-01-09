@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // hash the passphrase
-    const hash = crypto.createHash('sha1').update(body.passphrase).digest('hex');
+    const hash = crypto.createHash('sha256').update(body.passphrase).digest('hex');
     console.log(hash);
 
     let userId = "";
