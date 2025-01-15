@@ -21,7 +21,7 @@
                                 :ui="{ label: 'text-gray-500 dark:text-gray-600' }" />
                         </div>
                         <div :class="user.id === msg.sender.id ? 'self-end text-end' : ''"
-                            class="flex flex-col gap-1 w-fit">
+                            class="flex flex-col gap-1 w-fit" :ref="'message-' + msg.id">
                             <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
                                 class="flex gap-2 items-center" title="Show profile"
                                 @click="openMiniProfile(msg.sender)">
@@ -71,7 +71,7 @@
             <div v-if="replyTo"
                 class="flex flex-row content-center items-center gap-2 p-2 text-sm bg-gray-100 dark:bg-gray-950/90 rounded-xl">
                 <p class="font-bold">Replying to {{ replyTo.sender.name }}:</p>
-                <p>{{ replyTo.content }}</p>
+                <p>{{ removeReplyTag(replyTo.content) }}</p>
                 <UButton @click="replyTo = null" color="gray" size="xs" class="text-xs self-end" variant="link"
                     icon="i-heroicons-x-mark-16-solid" :padded="false" />
             </div>
@@ -459,6 +459,9 @@ export default {
             const d = new Date(date);
             return d.toLocaleDateString();
         },
+        removeReplyTag(msg) {
+            return msg.replace(/<r:([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})>/g, '').trim();
+        },
         isReplyMsg(msg) {
             const replyTagRegex = /<r:([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})>/g;
             const match = replyTagRegex.exec(msg);
@@ -474,7 +477,12 @@ export default {
         gotoMsg(msgId) {
             const index = this.messages.findIndex(m => m.id === msgId);
             if (index !== -1) {
-                this.$refs.messagesContainer.children[index].scrollIntoView({ behavior: 'smooth' });
+            const messageElement = this.$refs['message-' + msgId][0];
+            messageElement.scrollIntoView({ behavior: 'smooth' });
+            messageElement.classList.add('flash');
+            setTimeout(() => {
+                messageElement.classList.remove('flash');
+            }, 1000);
             }
         },
     },
@@ -486,5 +494,14 @@ export default {
 .hybrid-break {
     overflow-wrap: break-word;
     word-break: break-word;
+}
+
+.flash {
+    animation: flash-animation 1s ease-in-out;
+}
+
+@keyframes flash-animation {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: theme('colors.gray.800'); }
 }
 </style>
