@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event);
-    console.log(body);
     
     if (!body.id || !body.passphrase) {
         return { code: 400, message: 'Invalid body' };

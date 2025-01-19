@@ -82,11 +82,12 @@
                 </template>
             </UInput>
         </div>
-        <div v-else class="flex flex-col p-8 relative bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg items-center justify-between gap-4">
+        <div v-else
+            class="flex flex-col p-8 relative bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg items-center justify-between gap-4">
             <h1 class="text-2xl text-primary-500">No decryption key found</h1>
             <p>Enter the passphrase to decrypt the messages</p>
-            <UInput v-model.trim="passphrase" placeholder="Decryption key" @keyup.enter="unlockRoom"
-                class="w-72 mt-6" maxlength="32" size="xl" />
+            <UInput v-model.trim="passphrase" placeholder="Decryption key" @keyup.enter="unlockRoom" class="w-72 mt-6"
+                maxlength="32" size="xl" />
             <p class="text-gray-700"></p>
             <UButton @click="unlockRoom" color="primary" variant="link">Enter</UButton>
         </div>
@@ -270,12 +271,14 @@ export default {
             title: route.params.id.slice(0, 8),
         });
 
-        try {
-            fetchRoomHistory();
-        } catch (error) {
-            this.toast.add({ title: 'Error', description: error, color: 'red' });
-            console.error('Failed to fetch room history:', error);
-        }
+        onMounted(() => {
+            try {
+                fetchRoomHistory();
+            } catch (error) {
+                this.toast.add({ title: 'Error', description: error, color: 'red' });
+                console.error('Failed to fetch room history:', error);
+            }
+        });
 
         return { user, messages, toast, discover, passphraseCache, encryptMessage, decryptMessage, fetchRoomHistory };
     },
