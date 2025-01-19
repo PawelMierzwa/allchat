@@ -30,11 +30,13 @@
         </div>
         <div v-if="showLogin"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
-            <LoginDialog @login="handleLogin" @noAcc="showLogin = false; showRegister = true" @close="showLogin = false" />
+            <LoginDialog @login="handleLogin" @noAcc="showLogin = false; showRegister = true"
+                @close="showLogin = false" />
         </div>
         <div v-else-if="showRegister"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
-            <RegisterDialog @register="handleRegister" @hasAcc="showRegister = false; showLogin = true" @close="showRegister = false" />
+            <RegisterDialog @register="handleRegister" @hasAcc="showRegister = false; showLogin = true"
+                @close="showRegister = false" />
         </div>
         <div v-else-if="showRules"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
@@ -100,21 +102,32 @@ export default {
             }
             if (this.passphrase.length >= 3 && this.passphrase.length < 32) {
                 this.loadRoom = true;
-                $fetch('/api/hash', {
-                    method: 'POST',
-                    body: JSON.stringify({ id: this.user.id, passphrase: this.passphrase })
-                }).then(data => {
-                    if (data.code === 200) {
-                        this.enterTimeout = setTimeout(() => {
-                            this.$router.push(`/room/${data.message}`);
-                        }, 1500);
-                    } else {
+                // hash the passphrase and send it to the server
+                crypto.subtle.digest('SHA-1', new TextEncoder().encode(this.passphrase)).then(hashBuffer => {
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hash = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+                    $fetch('/api/hash', {
+                        method: 'POST',
+                        body: JSON.stringify({ id: this.user.id, passphrase: hash })
+                    }).then(data => {
+                        if (data.code === 200) {
+                            crypto.subtle.digest('SHA-256', new TextEncoder().encode(this.passphrase + this.passphrase)).then(hashBuffer => {
+                                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                                const hashedPassphrase = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+                                sessionStorage.setItem('pp', hashedPassphrase);
+                                this.enterTimeout = setTimeout(() => {
+                                    this.$router.push(`/room/${hash}`);
+                                }, 1500);
+                            });
+                        } else {
+                            this.loadRoom = false;
+                            this.toast.add({ description: data.message, color: 'red' });
+                        }
+                    }).catch(err => {
+                        console.error(err);
                         this.loadRoom = false;
-                        this.toast.add({ description: data.message, color: 'red' });
-                    }
-                }).catch(err => {
-                    console.error(err);
-                    this.loadRoom = false;
+                    });
                 });
             }
         },

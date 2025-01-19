@@ -2,12 +2,12 @@
     <div class="flex flex-col mx-auto px-0 items-center w-full md:w-4/5 lg:w-3/5 my-auto font-mono">
         <div class="w-full items-center relative justify-center flex gap-4">
             <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
-            <div class="absolute flex items-center right-0">
+            <div v-if="passphraseCache" class="absolute flex items-center right-0">
                 <UButton @click="showRoomStats = true" size="sm" class="w-8 h-8" color="gray" icon="i-mdi-chart-bar"
                     variant="link" />
             </div>
         </div>
-        <div
+        <div v-if="passphraseCache"
             class="px-2 md:px-4 w-full py-6 relative bg-gray-100 dark:bg-gray-900 h-[70vh] flex flex-col gap-4 rounded-lg shadow-lg ">
             <div ref="messagesContainer" class="overflow-y-auto overflow-x-hidden h-full flex flex-col gap-4 px-2">
                 <div v-if="Object.keys(discover).length > 0 && messages.length > 0"
@@ -81,6 +81,14 @@
                     <UButton color="gray" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
                 </template>
             </UInput>
+        </div>
+        <div v-else class="flex flex-col p-8 relative bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg items-center justify-between gap-4">
+            <h1 class="text-2xl text-primary-500">No decryption key found</h1>
+            <p>Enter the passphrase to decrypt the messages</p>
+            <UInput v-model.trim="passphrase" placeholder="Decryption key" @keyup.enter="unlockRoom"
+                class="w-72 mt-6" maxlength="32" size="xl" />
+            <p class="text-gray-700"></p>
+            <UButton @click="unlockRoom" color="primary" variant="link">Enter</UButton>
         </div>
         <div v-if="wsDisconnected"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
@@ -167,6 +175,7 @@ export default {
             showRoomStats: false,
             replyTo: null,
             msgHovered: null,
+            passphrase: '',
         }
     },
     setup() {
@@ -175,6 +184,7 @@ export default {
         const user = computed(() => sessionStore.user);
         const messages = ref([]);
         const discover = ref({});
+        const passphraseCache = ref('');
         const toast = useToast();
 
         definePageMeta({
@@ -182,6 +192,7 @@ export default {
         })
 
         async function fetchRoomHistory() {
+            if (!passphraseCache) return;
             const { data, error } = await useFetch('/api/room/' + route.params.id);
             if (error.value) {
                 console.error('Failed to fetch room history:', error.value);
@@ -193,7 +204,7 @@ export default {
                     const decryptedMessages = await Promise.all(fetchedMessages.map(async (msg) => {
                         const encryptedData = Uint8Array.from(atob(msg.content), c => c.charCodeAt(0));
                         const iv = Uint8Array.from(atob(msg.iv), c => c.charCodeAt(0));
-                        const decryptedContent = await decryptMessage(encryptedData, iv, route.params.id);
+                        const decryptedContent = await decryptMessage(encryptedData, iv, passphraseCache.value);
                         return {
                             ...msg,
                             content: decryptedContent
@@ -266,18 +277,21 @@ export default {
             console.error('Failed to fetch room history:', error);
         }
 
-        return { user, messages, toast, discover, encryptMessage, decryptMessage };
+        return { user, messages, toast, discover, passphraseCache, encryptMessage, decryptMessage, fetchRoomHistory };
     },
     mounted() {
         this.gameId = this.$route.params.id;
+        this.passphraseCache = sessionStorage.getItem('pp');
         try {
             this.connect();
         } catch (error) {
             console.error('Failed to connect to chat:', error);
             this.toast.add({ title: 'Error', description: error, color: 'red' });
         }
-        this.$refs.messagesContainer.addEventListener('scroll', this.handleScroll);
-        this.scrollToBottom();
+        if (this.$refs.messagesContainer) {
+            this.$refs.messagesContainer.addEventListener('scroll', this.handleScroll);
+            this.scrollToBottom();
+        }
     },
     beforeUnmount() {
         if (this.ws) {
@@ -319,7 +333,7 @@ export default {
                     try {
                         const encryptedData = Uint8Array.from(atob(messageData.content), c => c.charCodeAt(0));
                         const iv = Uint8Array.from(atob(messageData.iv), c => c.charCodeAt(0));
-                        const decryptedContent = await this.decryptMessage(encryptedData, iv, this.gameId);
+                        const decryptedContent = await this.decryptMessage(encryptedData, iv, this.passphraseCache);
                         // Update chat history with decrypted content
                         this.messages.push({
                             id: messageData.id,
@@ -342,6 +356,28 @@ export default {
                     this.toast.add({ title: 'Error', description: messageData.error, color: 'red' });
                 }
             });
+        },
+        async unlockRoom() {
+            if (this.passphrase.length >= 3 && this.passphrase.length < 32) {
+                const hash = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(this.passphrase)).then(hashBuffer => {
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+                });
+                if (hash == this.gameId) {
+                    this.passphraseCache = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(this.passphrase + this.passphrase)).then(hashBuffer => {
+                        const hashArray = Array.from(new Uint8Array(hashBuffer));
+                        return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+                    });
+                    this.passphrase = '';
+                    this.fetchRoomHistory();
+                    if (this.$refs.messagesContainer) {
+                        this.$refs.messagesContainer.addEventListener('scroll', this.handleScroll);
+                        this.scrollToBottom();
+                    }
+                } else {
+                    this.toast.add({ title: 'Invalid decryption key', description: 'The decryption key is incorrect.', color: 'red' });
+                }
+            }
         },
         setReplyTo(msg) {
             this.replyTo = msg;
@@ -366,7 +402,7 @@ export default {
                 }
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                     const msgId = uuidv4();
-                    const { iv, encryptedData } = await this.encryptMessage(content, this.gameId);
+                    const { iv, encryptedData } = await this.encryptMessage(content, this.passphraseCache);
                     const messageData = {
                         action: 'message',
                         room_id: this.gameId,
@@ -477,12 +513,12 @@ export default {
         gotoMsg(msgId) {
             const index = this.messages.findIndex(m => m.id === msgId);
             if (index !== -1) {
-            const messageElement = this.$refs['message-' + msgId][0];
-            messageElement.scrollIntoView({ behavior: 'smooth' });
-            messageElement.classList.add('flash');
-            setTimeout(() => {
-                messageElement.classList.remove('flash');
-            }, 1000);
+                const messageElement = this.$refs['message-' + msgId][0];
+                messageElement.scrollIntoView({ behavior: 'smooth' });
+                messageElement.classList.add('flash');
+                setTimeout(() => {
+                    messageElement.classList.remove('flash');
+                }, 1000);
             }
         },
     },
@@ -501,7 +537,14 @@ export default {
 }
 
 @keyframes flash-animation {
-    0%, 100% { background-color: transparent; }
-    50% { background-color: theme('colors.gray.800'); }
+
+    0%,
+    100% {
+        background-color: transparent;
+    }
+
+    50% {
+        background-color: theme('colors.gray.800');
+    }
 }
 </style>

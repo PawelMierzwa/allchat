@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,14 +8,14 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event);
+    console.log(body);
+    
     if (!body.id || !body.passphrase) {
         return { code: 400, message: 'Invalid body' };
     }
 
     // hash the passphrase
-    const hash = crypto.createHash('sha256').update(body.passphrase).digest('hex');
-    console.log(hash);
-
+    const hash = body.passphrase;
     let userId = "";
 
     jwt.verify(token, useRuntimeConfig().jwtSecret, (err, decoded) => {
@@ -61,7 +60,7 @@ export default defineEventHandler(async (event) => {
     const unlockRows = unlocksResult?.rows ?? [];
     if (unlockRows.length !== 0) {
         // user already unlocked the hash, let them in
-        return { code: 200, message: hash };
+        return { code: 200, message: "ok" };
     }
 
     // add the hash to user's account
@@ -70,5 +69,5 @@ export default defineEventHandler(async (event) => {
     if (hashUpdateOutcome.error) {
         return { code: 500, message: 'Internal Server Error' };
     }
-    return { code: 200, message: hash };
+    return { code: 200, message: "ok" };
 });
