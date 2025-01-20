@@ -9,7 +9,7 @@
         </div>
         <div v-if="passphraseCache"
             class="px-2 md:px-4 w-full py-6 relative bg-gray-100 dark:bg-gray-900 h-[70vh] flex flex-col gap-4 rounded-lg shadow-lg ">
-            <div ref="messagesContainer" class="overflow-y-auto overflow-x-hidden h-full flex flex-col gap-4 px-2">
+            <div ref="messagesContainer" class="overflow-y-auto overflow-x-hidden h-full scrollbar flex flex-col gap-4 px-2">
                 <div v-if="Object.keys(discover).length > 0 && messages.length > 0"
                     class="text-center text-gray-500 text-sm">
                     <p>Room discovered by {{ discover.username }} at {{ discover.discoveredAt }}</p>
@@ -549,5 +549,14 @@ export default {
     50% {
         background-color: theme('colors.gray.800');
     }
+}
+
+.scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.primary.800') theme('colors.transparent');
+}
+
+.scrollbar::-webkit-scrollbar {
+    width: 3px;
 }
 </style>

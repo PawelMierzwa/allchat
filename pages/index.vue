@@ -19,6 +19,10 @@
                 </template>
             </UInput>
             <UButton class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
+                @click="enterRoom" v-if="showEnterButton && isAuthenticated" variant="link">
+                enter the room
+            </UButton>
+            <UButton class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
                 @click="showLogin = true" v-if="!isAuthenticated" variant="link">
                 Login to join a room
             </UButton>
