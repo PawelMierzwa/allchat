@@ -21,15 +21,6 @@ export default defineEventHandler(async (event) => {
         userId = (decoded as jwt.JwtPayload).id;
     });
 
-    const secret = useRuntimeConfig().jwtSecret;
-    let decoded;
-    try {
-        decoded = jwt.verify(token, secret);
-    } catch (err) {
-        console.error(err);
-        return { code: 403, message: 'Forbidden' };
-    }
-
     const usersDb = useDatabase("users");
     // need to check if the user is allowed to view this match
     const unlockResult = await usersDb.sql`SELECT * FROM unlocks WHERE roomId = ${id} AND userId = ${userId}`;
@@ -56,7 +47,7 @@ export default defineEventHandler(async (event) => {
     
     let discovererName = "???";
     if (discovererRows.length === 0) {
-        discovererName = "you!";
+        discovererName = "you";
     } else {
         discovererName = discovererRows[0].username as string;
     }
@@ -71,6 +62,7 @@ export default defineEventHandler(async (event) => {
             sender: { id: msg.userId, name: msg.username },
             content: msg.message,
             createdAt: msg.createdAt,
+
             iv: msg.iv
         };
     });

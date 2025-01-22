@@ -9,7 +9,8 @@
         </div>
         <div v-if="passphraseCache"
             class="px-2 md:px-4 w-full py-6 relative bg-gray-100 dark:bg-gray-900 h-[70vh] flex flex-col gap-4 rounded-lg shadow-lg ">
-            <div ref="messagesContainer" class="overflow-y-auto overflow-x-hidden h-full scrollbar flex flex-col gap-4 px-2">
+            <div ref="messagesContainer" @scroll="handleScroll"
+                class="overflow-y-auto overflow-x-hidden h-full scrollbar flex flex-col gap-4 px-2">
                 <div v-if="Object.keys(discover).length > 0 && messages.length > 0"
                     class="text-center text-gray-500 text-sm">
                     <p>Room discovered by {{ discover.username }} at {{ discover.discoveredAt }}</p>
@@ -83,8 +84,8 @@
             </UInput>
         </div>
         <div v-else
-            class="flex flex-col p-8 relative bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg items-center justify-between gap-4">
-            <h1 class="text-2xl text-primary-500">No decryption key found</h1>
+            class="flex flex-col p-8 relative bg-gray-100 font-mono dark:bg-gray-900 rounded-lg shadow-lg items-center justify-between gap-4">
+            <h1 class="text-2xl text-primary-500 font-bold">No decryption key found</h1>
             <p>Enter the passphrase to decrypt the messages</p>
             <UInput v-model.trim="passphrase" placeholder="Decryption key" @keyup.enter="unlockRoom" class="w-72 mt-6"
                 maxlength="32" size="xl" />
@@ -195,6 +196,7 @@ export default {
         async function fetchRoomHistory() {
             if (!passphraseCache) return;
             const { data, error } = await useFetch('/api/room/' + route.params.id);
+
             if (error.value) {
                 console.error('Failed to fetch room history:', error.value);
                 const toast = useToast();
@@ -271,16 +273,14 @@ export default {
             title: route.params.id.slice(0, 8),
         });
 
-        onMounted(() => {
-            try {
-                fetchRoomHistory();
-            } catch (error) {
-                this.toast.add({ title: 'Error', description: error, color: 'red' });
-                console.error('Failed to fetch room history:', error);
-            }
-        });
+        try {
+            fetchRoomHistory();
+        } catch (error) {
+            this.toast.add({ title: 'Error', description: error, color: 'red' });
+            console.error('Failed to fetch room history:', error);
+        }
 
-        return { user, messages, toast, discover, passphraseCache, encryptMessage, decryptMessage, fetchRoomHistory };
+        return { user, messages, toast, discover, passphraseCache, encryptMessage, decryptMessage };
     },
     mounted() {
         this.gameId = this.$route.params.id;
@@ -292,7 +292,6 @@ export default {
             this.toast.add({ title: 'Error', description: error, color: 'red' });
         }
         if (this.$refs.messagesContainer) {
-            this.$refs.messagesContainer.addEventListener('scroll', this.handleScroll);
             this.scrollToBottom();
         }
     },
@@ -300,10 +299,10 @@ export default {
         if (this.ws) {
             this.ws.close();
         }
-        this.$refs.messagesContainer.removeEventListener('scroll', this.handleScroll);
     },
     methods: {
         async connect() {
+            if (!this.passphraseCache) return;
             const isSecure = location.protocol === "https:";
             const url = (isSecure ? "wss://" : "ws://") + location.host + "/chatroom";
             if (this.ws) {
@@ -360,6 +359,28 @@ export default {
                 }
             });
         },
+        async refetchMessages() {
+            if (!this.passphraseCache) return;
+            const { data, error } = await $fetch('/api/room/' + this.gameId);
+            console.log(data, error);
+            if (data.code === 200) {
+                const fetchedMessages = data.messages;
+                const decryptedMessages = await Promise.all(fetchedMessages.map(async (msg) => {
+                    const encryptedData = Uint8Array.from(atob(msg.content), c => c.charCodeAt(0));
+                    const iv = Uint8Array.from(atob(msg.iv), c => c.charCodeAt(0));
+                    const decryptedContent = await decryptMessage(encryptedData, iv, this.passphraseCache);
+                    return {
+                        ...msg,
+                        content: decryptedContent
+                    };
+                }));
+                this.messages = decryptedMessages;
+                this.discover = data.discover;
+            } else {
+                console.error('Failed to fetch room history:', error);
+                this.toast.add({ title: 'Failed to fetch room history', description: error, color: 'red' });
+            }
+        },
         async unlockRoom() {
             if (this.passphrase.length >= 3 && this.passphrase.length < 32) {
                 const hash = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(this.passphrase)).then(hashBuffer => {
@@ -372,11 +393,11 @@ export default {
                         return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
                     });
                     this.passphrase = '';
-                    this.fetchRoomHistory();
                     if (this.$refs.messagesContainer) {
-                        this.$refs.messagesContainer.addEventListener('scroll', this.handleScroll);
                         this.scrollToBottom();
                     }
+                    this.connect();
+                    this.refetchMessages();
                 } else {
                     this.toast.add({ title: 'Invalid decryption key', description: 'The decryption key is incorrect.', color: 'red' });
                 }
@@ -438,6 +459,7 @@ export default {
             }
         },
         reconnect() {
+            if (!this.passphraseCache) return;
             if (this.ws) {
                 this.ws.close();
             }
@@ -445,6 +467,7 @@ export default {
             const url = (isSecure ? "wss://" : "ws://") + location.host + "/chatroom";
             this.ws = new WebSocket(url);
             this.wsDisconnected = false;
+            this.refetchMessages();
         },
         openMiniProfile(user) {
             this.selectedUser = user;
@@ -553,7 +576,7 @@ export default {
 
 .scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: theme('colors.primary.800') theme('colors.transparent');
+    scrollbar-color: theme('colors.orange.800') theme('colors.transparent');
 }
 
 .scrollbar::-webkit-scrollbar {
