@@ -370,6 +370,7 @@ export default {
             this.replyTo = msg;
         },
         async sendMessage() {
+            if (!this.passphraseCache) return;
             if (this.message.trim() === '') return;
             if (this.message.trim().length === 0 || this.message.trim().match(/^[\u200B\s]+$/)) {
                 this.message = '';
@@ -539,7 +540,7 @@ export default {
 
 .scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: theme('colors.orange.800') theme('colors.transparent');
+    scrollbar-color: theme('colors.gray.800') theme('colors.transparent');
 }
 
 .scrollbar::-webkit-scrollbar {
