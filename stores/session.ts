@@ -7,6 +7,7 @@ interface User {
 export const useSessionStore = defineStore('session', {
     state: () => ({
         user: null as User | null,
+        passphraseCache: "",
     }),
     actions: {
         async login(user: User) {
@@ -15,6 +16,10 @@ export const useSessionStore = defineStore('session', {
         async logout() {
             $fetch('/api/account/logout');
             this.user = null;
+            this.passphraseCache = '';
+        },
+        setPassphraseCache(passphrase: string) {
+            this.passphraseCache = passphrase;
         },
     },
     getters: {

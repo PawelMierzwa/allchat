@@ -17,7 +17,7 @@
                 </div>
                 <div v-if="messages.length > 0" class="flex flex-col gap-4">
                     <template v-for="(msg, index) in messages" :key="msg.id" class="w-full">
-                        <div v-if="shouldShowDateDivider(index)" class="text-center text-gray-500 text-sm">
+                        <div v-if="shouldShowDateDivider(index)" class="text-center text-gray-500 text-sm rounded-sm">
                             <UDivider :label="formatDateDivider(messages[index].createdAt)" class="text-gray-500"
                                 :ui="{ label: 'text-gray-500 dark:text-gray-600' }" />
                         </div>
@@ -83,14 +83,10 @@
                 </template>
             </UInput>
         </div>
-        <div v-else
-            class="flex flex-col p-8 relative bg-gray-100 font-mono dark:bg-gray-900 rounded-lg shadow-lg items-center justify-between gap-4">
-            <h1 class="text-2xl text-primary-500 font-bold">No decryption key found</h1>
-            <p>Enter the passphrase to decrypt the messages</p>
-            <UInput v-model.trim="passphrase" placeholder="Decryption key" @keyup.enter="unlockRoom" class="w-72 mt-6"
-                maxlength="32" size="xl" />
-            <p class="text-gray-700"></p>
-            <UButton @click="unlockRoom" color="primary" variant="link">Enter</UButton>
+        <div v-else class="flex flex-col items-center justify-center w-full h-full gap-2">
+            <p>Cannot decrypt messages without a passphrase.</p>
+            <p>Please enter the room again to view messages.</p>
+            <NuxtLink to="/" class="mt-2 text-primary-500 underline hover:text-primary-700">Home</NuxtLink>
         </div>
         <div v-if="wsDisconnected"
             class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
@@ -180,47 +176,44 @@ export default {
             passphrase: '',
         }
     },
-    setup() {
+    async setup() {
         const route = useRoute();
         const sessionStore = useSessionStore();
         const user = computed(() => sessionStore.user);
+        const passphraseCache = computed(() => sessionStore.passphraseCache);
         const messages = ref([]);
         const discover = ref({});
-        const passphraseCache = ref('');
         const toast = useToast();
 
         definePageMeta({
             middleware: ['auth', 'unlocked'],
-        })
+        });
+        
+        const { data, error } = await useFetch('/api/room/' + route.params.id);
 
-        async function fetchRoomHistory() {
-            if (!passphraseCache) return;
-            const { data, error } = await useFetch('/api/room/' + route.params.id);
-
-            if (error.value) {
-                console.error('Failed to fetch room history:', error.value);
-                const toast = useToast();
-                toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
+        if (error.value) {
+            console.error('Failed to fetch room history:', error.value);
+            const toast = useToast();
+            toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
+        } else {
+            if (data.value.code === 200) {
+                const fetchedMessages = data.value.messages;
+                const decryptedMessages = await Promise.all(fetchedMessages.map(async (msg) => {
+                    const encryptedData = Uint8Array.from(atob(msg.content), c => c.charCodeAt(0));
+                    const iv = Uint8Array.from(atob(msg.iv), c => c.charCodeAt(0));
+                    const decryptedContent = await decryptMessage(encryptedData, iv, passphraseCache.value);
+                    return {
+                        ...msg,
+                        content: decryptedContent
+                    };
+                }));
+                messages.value = decryptedMessages;
+                discover.value = data.value.discover;
             } else {
-                if (data.value.code === 200) {
-                    const fetchedMessages = data.value.messages;
-                    const decryptedMessages = await Promise.all(fetchedMessages.map(async (msg) => {
-                        const encryptedData = Uint8Array.from(atob(msg.content), c => c.charCodeAt(0));
-                        const iv = Uint8Array.from(atob(msg.iv), c => c.charCodeAt(0));
-                        const decryptedContent = await decryptMessage(encryptedData, iv, passphraseCache.value);
-                        return {
-                            ...msg,
-                            content: decryptedContent
-                        };
-                    }));
-                    messages.value = decryptedMessages;
-                    discover.value = data.value.discover;
-                } else {
-                    throw showError({
-                        statusCode: data.value.code,
-                        statusMessage: data.value.message
-                    });
-                }
+                throw showError({
+                    statusCode: data.value.code,
+                    statusMessage: data.value.message
+                });
             }
         }
 
@@ -273,18 +266,10 @@ export default {
             title: route.params.id.slice(0, 8),
         });
 
-        try {
-            fetchRoomHistory();
-        } catch (error) {
-            this.toast.add({ title: 'Error', description: error, color: 'red' });
-            console.error('Failed to fetch room history:', error);
-        }
-
         return { user, messages, toast, discover, passphraseCache, encryptMessage, decryptMessage };
     },
     mounted() {
         this.gameId = this.$route.params.id;
-        this.passphraseCache = sessionStorage.getItem('pp');
         try {
             this.connect();
         } catch (error) {
@@ -379,28 +364,6 @@ export default {
             } else {
                 console.error('Failed to fetch room history:', error);
                 this.toast.add({ title: 'Failed to fetch room history', description: error, color: 'red' });
-            }
-        },
-        async unlockRoom() {
-            if (this.passphrase.length >= 3 && this.passphrase.length < 32) {
-                const hash = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(this.passphrase)).then(hashBuffer => {
-                    const hashArray = Array.from(new Uint8Array(hashBuffer));
-                    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-                });
-                if (hash == this.gameId) {
-                    this.passphraseCache = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(this.passphrase + this.passphrase)).then(hashBuffer => {
-                        const hashArray = Array.from(new Uint8Array(hashBuffer));
-                        return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-                    });
-                    this.passphrase = '';
-                    if (this.$refs.messagesContainer) {
-                        this.scrollToBottom();
-                    }
-                    this.connect();
-                    this.refetchMessages();
-                } else {
-                    this.toast.add({ title: 'Invalid decryption key', description: 'The decryption key is incorrect.', color: 'red' });
-                }
             }
         },
         setReplyTo(msg) {

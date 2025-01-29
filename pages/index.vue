@@ -75,7 +75,7 @@ export default {
             middleware: 'auth',
         })
 
-        return { isAuthenticated, startSession, user, toast };
+        return { isAuthenticated, startSession, user, toast, setPassphrase: sessionStore.setPassphraseCache };
     },
     watch: {
         passphrase(val) {
@@ -119,7 +119,8 @@ export default {
                             crypto.subtle.digest('SHA-256', new TextEncoder().encode(this.passphrase + this.passphrase)).then(hashBuffer => {
                                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                                 const hashedPassphrase = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-                                sessionStorage.setItem('pp', hashedPassphrase);
+                                console.log(hashedPassphrase);
+                                this.setPassphrase(hashedPassphrase);
                                 this.enterTimeout = setTimeout(() => {
                                     this.$router.push(`/room/${hash}`);
                                 }, 1500);

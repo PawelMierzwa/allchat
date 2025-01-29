@@ -1,6 +1,6 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-    if (!useSessionStore().user) {
-        const { data } = await useFetch(`/api/room/${to.params.id}/verifyUser}`);
+    if (useSessionStore().user && useSessionStore().passphraseCache != "") {
+        const { data } = await useFetch(`/api/room/${to.params.id}/verifyUser`);
         if (data.value) {
             if (data.value.code === 200) {
                 return;
@@ -10,5 +10,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         } else {
             return abortNavigation("Error");
         }
+    }
+    else {
+        return navigateTo("/");
     }
 });
