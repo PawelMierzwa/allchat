@@ -46,15 +46,18 @@ export default {
                     { label: 'About', to: '/about', icon: 'i-heroicons-information-circle' },
                 ]
             ],
-            open: false,
         }
     },
     setup() {
         const sessionStore = useSessionStore();
         const user = computed(() => sessionStore.user);
         const isAuthenticated = computed(() => sessionStore.isAuthenticated);
+        const open = ref(false);
         const logout = function () {
             sessionStore.logout();
+            open.value = false;
+            const router = useRouter();
+            router.push('/');
         }
 
         const items = [
@@ -100,7 +103,7 @@ export default {
             ]
         });
 
-        return { user, items, isAuthenticated };
+        return { user, open, items, isAuthenticated };
     },
     computed: {
         currentYear() {

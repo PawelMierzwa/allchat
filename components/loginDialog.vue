@@ -7,9 +7,14 @@
             <UInput v-model="username" placeholder="Username" @input="errorMsg = ''" />
             <UInput v-model="password" placeholder="Password" type="password" @keyup.enter="sendLogin"
                 @input="errorMsg = ''" />
+            <UCheckbox label="Remember me" v-model="remember">
+                <template #label="{ label }">
+                    <span class="text-sm text-gray-500 select-none">{{ label }}</span>
+                </template>
+            </UCheckbox>
         </div>
         <UButton @click="sendLogin" :loading="loadingRequest" loading-icon="i-mdi-loading" :data-error="errorMsg"
-            class="data-[error='']:my-4">Login</UButton>
+            class="data-[error='']:my-1">Login</UButton>
         <p class="text-red-600 text-center my-2">{{ errorMsg }}</p>
         <UButton class="text-primary-500 hover:text-primary-800 cursor-pointer absolute bottom-2"
             @click="$emit('noAcc')" variant="link">Don't have an account?</UButton>
@@ -23,18 +28,24 @@ export default {
             username: '',
             password: '',
             loadingRequest: false,
-            errorMsg: ''
+            errorMsg: '',
+            remember: false
         }
     },
     methods: {
         async sendLogin() {
+            if (!this.username || !this.password) {
+                this.errorMsg = "Please fill in all fields";
+                return;
+            }
             this.loadingRequest = true;
             try {
                 const response = await $fetch('/api/account/login', {
                     method: 'POST',
                     body: JSON.stringify({
                         username: this.username,
-                        password: this.password
+                        password: this.password,
+                        remember: this.remember
                     })
                 });
                 if (response.status === 200) {

@@ -20,7 +20,7 @@
             </UInput>
             <UButton class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
                 @click="enterRoom" v-if="showEnterButton && isAuthenticated" variant="link">
-                enter the room
+                Enter the room
             </UButton>
             <UButton class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
                 @click="showLogin = true" v-if="!isAuthenticated" variant="link">
@@ -119,7 +119,6 @@ export default {
                             crypto.subtle.digest('SHA-256', new TextEncoder().encode(this.passphrase + this.passphrase)).then(hashBuffer => {
                                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                                 const hashedPassphrase = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-                                console.log(hashedPassphrase);
                                 this.setPassphrase(hashedPassphrase);
                                 this.enterTimeout = setTimeout(() => {
                                     this.$router.push(`/room/${hash}`);
