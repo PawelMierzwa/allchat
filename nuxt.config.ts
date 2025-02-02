@@ -9,6 +9,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     jwtSecret: '',
     jwtAlg: '',
+    imgUploadUrl: '',
+    public: {
+      imgUrl: '',
+    }
   },
   nitro: {
     experimental: {
@@ -30,5 +34,7 @@ export default defineNuxtConfig({
       },
     }
   },
-
+  colorMode: {
+    preference: 'dark',
+  }
 })
