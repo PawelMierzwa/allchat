@@ -1,11 +1,11 @@
 ```
-                                                              
+                                                       
       _/_/    _/  _/    _/_/_/  _/                    _/      
    _/    _/  _/  _/  _/        _/_/_/      _/_/_/  _/_/_/_/   
   _/_/_/_/  _/  _/  _/        _/    _/  _/    _/    _/        
  _/    _/  _/  _/  _/        _/    _/  _/    _/    _/         
 _/    _/  _/  _/    _/_/_/  _/    _/    _/_/_/      _/_/      
-                                                                                                                     
+                                                      
 ```
 
 [![GitHub Release](https://img.shields.io/github/v/release/pawelmierzwa/allchat?logo=github&color=blue)](https://github.com/PawelMierzwa/allchat/releases)
