@@ -42,7 +42,7 @@
 
 <script setup>
 definePageMeta({
-    middleware: 'auth',
+    middleware: ['auth','owner'],
 });
 
 const route = useRoute();
