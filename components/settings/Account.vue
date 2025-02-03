@@ -21,8 +21,8 @@
                 <UModal v-model="openFilePicker">
                     <UCard id="upload-card" class="border">
                         <div ref="imagePreviews" id="imagePreviews" :class="scaledPicture != null ? 'mb-2' : ''"></div>
-                        <UInput v-model="picture" type="file" @change="handleFileUpload" size="lg" accept="image/png, image/jpeg"
-                            icon="mdi-arrow-expand-up" label="Upload photo" id="file-upload">
+                        <UInput type="file" @change="handleFileUpload" size="lg" accept="image/png, image/jpeg"
+                            icon="mdi-arrow-expand-up" label="Upload photo" id="file-upload" required>
                             <template #trailing>
                                 <span class="text-gray-500 dark:text-gray-400 text-xs">{{ fileSize }}</span>
                             </template>
