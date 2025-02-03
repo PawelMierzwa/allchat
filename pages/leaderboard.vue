@@ -21,7 +21,7 @@
                 <USkeleton />
             </div>
         </div>
-        <div v-else>
+        <div class="flex flex-col items-center justify-center" v-else>
             <h2 class="text-3xl">Loading leaderboard...</h2>
             <UIcon name="i-mdi-loading" class="animate-spin text-4xl mx-auto mt-8" />
         </div>

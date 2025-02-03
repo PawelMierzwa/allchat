@@ -22,7 +22,7 @@
                                 :ui="{ label: 'text-gray-500 dark:text-gray-600' }" />
                         </div>
                         <div :class="user.id === msg.sender.id ? 'self-end text-end' : ''"
-                            class="flex flex-col gap-1 w-fit" :ref="'message-' + msg.id">
+                            class="flex flex-col gap-1 rounded-3xl w-fit" :ref="'message-' + msg.id">
                             <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
                                 class="flex gap-2 items-center" title="Show profile"
                                 @click="openMiniProfile(msg.sender)">
@@ -505,9 +505,17 @@ export default {
             if (index !== -1) {
                 const messageElement = this.$refs['message-' + msgId][0];
                 messageElement.scrollIntoView({ behavior: 'smooth' });
-                messageElement.classList.add('flash');
+                if (this.$colorMode.value === 'dark') {
+                    messageElement.classList.add('flash-dark');
+                } else {
+                    messageElement.classList.add('flash');
+                }
                 setTimeout(() => {
-                    messageElement.classList.remove('flash');
+                    if (this.$colorMode.value === 'dark') {
+                        messageElement.classList.remove('flash-dark');
+                    } else {
+                        messageElement.classList.remove('flash');
+                    }
                 }, 1000);
             }
         },
@@ -526,7 +534,23 @@ export default {
     animation: flash-animation 1s ease-in-out;
 }
 
+.flash-dark {
+    animation: flash-dark-animation 1s ease-in-out;
+}
+
 @keyframes flash-animation {
+
+    0%,
+    100% {
+        background-color: transparent;
+    }
+
+    50% {
+        background-color: theme('colors.gray.200');
+    }
+}
+
+@keyframes flash-dark-animation {
 
     0%,
     100% {
@@ -540,6 +564,7 @@ export default {
 
 .scrollbar {
     scrollbar-width: thin;
+    /* fix needed for light theme */
     scrollbar-color: theme('colors.gray.800') theme('colors.transparent');
 }
 
