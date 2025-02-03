@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     jwtSecret: '',
     jwtAlg: '',
     imgUploadUrl: '',
+    workerSecret: '',
     public: {
       imgUrl: '',
     }
