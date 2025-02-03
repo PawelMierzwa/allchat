@@ -26,7 +26,8 @@
                             <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
                                 class="flex gap-2 items-center" title="Show profile"
                                 @click="openMiniProfile(msg.sender)">
-                                <UAvatar :src="useRuntimeConfig().public.imgUrl + msg.sender.id + '.webp'" :alt="msg.sender.name.toUpperCase()" size="lg" class="cursor-pointer" />
+                                <UAvatar :src="useRuntimeConfig().public.imgUrl + msg.sender.id + '.webp'"
+                                    :alt="msg.sender.name.toUpperCase()" size="md" class="cursor-pointer" />
                                 <div class="flex flex-col">
                                     <span class="text-xs text-gray-500 w-fit" title="" @click.stop>
                                         {{ toLocaleDate(msg.createdAt) }}
@@ -188,7 +189,7 @@ export default {
         definePageMeta({
             middleware: ['auth', 'unlocked'],
         });
-        
+
         const { data, error } = await useFetch('/api/room/' + route.params.id);
 
         if (error.value) {

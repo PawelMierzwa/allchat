@@ -1,7 +1,7 @@
 <template>
-    <UContainer class="flex flex-col items-center pt-32 md:p-32 font-mono">
+    <UContainer class="flex flex-col items-center pt-16 md:p-22 font-mono">
         <h1 class="text-3xl mb-8">Settings</h1>
-        <UTabs :items="tabs" v-model="selectedTab" class="w-full" v-if="isAuthenticated">
+        <UTabs :items="tabs" v-model="selectedTab" class="w-full h-[60vh] scroll overflow-y-auto" v-if="isAuthenticated">
             <template #general>
                 <SettingsGeneral />
             </template>
@@ -60,3 +60,15 @@ definePageMeta({
     title: () => tabs[selectedTab.value].label + ' Settings',
 });
 </script>
+
+<style scoped>
+.scroll {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.gray.700') theme('colors.transparent');
+}
+
+.scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+</style>

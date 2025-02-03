@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col relative overflow-x-hidden h-screen w-screen">
-        <nav class="flex flex-row justify-between items-center fixed w-full px-4 bg-gray-900">
+        <nav class="flex flex-row justify-between items-center w-full z-50 px-4 bg-gray-900">
             <UHorizontalNavigation :links="links" class="p-2">
                 <template #default="{ link, isActive }">
                     <span :data-active="isActive"
