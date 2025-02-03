@@ -4,7 +4,7 @@
         <h1 class="text-5xl" v-else>Loading...</h1>
         <div class="flex flex-col items-center justify-between mt-10 w-full" v-if="data">
             <div class="flex items-center gap-4">
-                <UAvatar :src="useRuntimeConfig().imgUrl + user.id" :alt="user.name.toUpperCase()" size="lg" />
+                <UAvatar :src="useRuntimeConfig().public.imgUrl + id + '.webp'" :alt="data.username.toUpperCase()" size="2xl" />
                 <div>
                     <h2 class="text-2xl">{{ data.username }}</h2>
                 </div>

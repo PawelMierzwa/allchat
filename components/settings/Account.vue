@@ -2,7 +2,7 @@
     <div class="flex flex-col items-center justify-between gap-4">
         <h2 class="text-lg mt-2">Profile</h2>
         <div class="flex flex-row items-center gap-4">
-            <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id" :alt="user.name.toUpperCase()" size="lg" />
+            <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'" :alt="user.name.toUpperCase()" size="lg" />
             <div>
                 <h2>{{ user.name }}</h2>
                 <p>{{ user.email }}</p>
@@ -11,7 +11,7 @@
         <form class="flex flex-col items-center justify-between gap-4 w-full">
             <div class="row" style="gap: 5px; align-items: center;">
                 <div class="flex flex-row items-center gap-1">
-                    <UButton color="primary" rounded="xl" @click="openFilePicker = true">
+                    <UButton color="primary" rounded="xl" @click="openFilePicker = true; fileSize = '0 MB'">
                         Update Profile Picture
                     </UButton>
                     <UButton variant="ghost" color="red" @click="deleteProfilePicture" class->

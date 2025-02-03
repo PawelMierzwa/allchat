@@ -3,7 +3,7 @@
         <h1 class="text-5xl">Your Profile</h1>
         <div class="flex flex-col items-center justify-between mt-10 w-full">
             <div class="flex items-center gap-4">
-                <UAvatar :src="'https://i.pravatar.cc/64?u=' + user.id" size="lg" />
+                <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'" :alt="user.name.toUpperCase()" size="lg" />
                 <div>
                     <h2 class="text-2xl">{{ user.name }}</h2>
                     <p class="text-gray-500">{{ user.email }}</p>
@@ -28,6 +28,7 @@
                         </tr>
                     </tbody>
                 </table>
+                <UButton variant="link" to="/settings#Account">Edit profile</UButton>
             </div>
             <div v-else-if="data.message" class="text-center">
                 <p>Error fetching user data</p>

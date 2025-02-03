@@ -14,7 +14,7 @@
                     <div :data-open="open"
                         class="group flex items-center gap-2 p-2 hover:bg-gray-800/40 data-[open=true]:bg-gray-800/40 text-gray-500 dark:text-gray-400 hover:text-primary-50 hover:dark:text-white data-[open=true]:text-primary-50 data-[open=true]:dark:text-white rounded-lg">
                         <p class="text-sm select-none">Profile</p>
-                        <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id" :alt="user.name.toUpperCase()" size="xs"
+                        <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'" :alt="user.name.toUpperCase()" size="xs"
                             :class="open ? 'grayscale-0' : 'grayscale'" class="group-hover:grayscale-0" />
                     </div>
                     <template #account>
