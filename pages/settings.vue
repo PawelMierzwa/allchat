@@ -1,7 +1,7 @@
 <template>
     <UContainer class="flex flex-col items-center pt-32 md:p-32 font-mono">
         <h1 class="text-3xl mb-8">Settings</h1>
-        <UTabs :items="tabs" class="w-full" v-if="isAuthenticated">
+        <UTabs :items="tabs" v-model="selectedTab" class="w-full" v-if="isAuthenticated">
             <template #general>
                 <SettingsGeneral />
             </template>
@@ -22,40 +22,41 @@
     </UContainer>
 </template>
 
-<script>
-export default {
-    data() {
-        return {
-            themes: [
-                { label: 'Dark', value: 'dark' },
-                { label: 'Light', value: 'light' },
-                { label: 'System', value: 'system' }
-            ],
-            tabs: [
-                {
-                    slot: 'general',
-                    label: 'General',
-                    icon: 'i-heroicons-cog',
-                },
-                {
-                    slot: 'appearance',
-                    label: 'Appearance',
-                    icon: 'i-heroicons-computer-desktop-solid',
-                },
-                {
-                    slot: 'account',
-                    label: 'Account',
-                    icon: 'i-mdi-account',
-                }
-            ]
-        }
+<script setup>
+const tabs = [
+    {
+        slot: 'general',
+        label: 'General',
+        icon: 'i-heroicons-cog',
     },
-    setup() {
-        const isAuthenticated = computed(() => useSessionStore().isAuthenticated);
-        definePageMeta({
-            middleware: 'auth',
-        })
-        return { isAuthenticated };
+    {
+        slot: 'appearance',
+        label: 'Appearance',
+        icon: 'i-heroicons-computer-desktop-solid',
+    },
+    {
+        slot: 'account',
+        label: 'Account',
+        icon: 'i-mdi-account',
     }
-}
+];
+
+const isAuthenticated = computed(() => useSessionStore().isAuthenticated);
+const selectedTab = ref(0);
+
+onMounted(() => {
+    if (window.location.hash) {
+        const hashValue = window.location.hash.slice(1).toLowerCase();
+        const tabIndex = tabs.findIndex(tab => tab.slot === hashValue);
+        if (tabIndex !== -1) {
+            selectedTab.value = tabIndex;
+            history.pushState("", document.title, window.location.pathname + window.location.search);
+        }
+    }
+});
+
+definePageMeta({
+    middleware: 'auth',
+    title: () => tabs[selectedTab.value].label + ' Settings',
+});
 </script>
