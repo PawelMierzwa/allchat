@@ -72,6 +72,7 @@ const picture = ref(null);
 const fileSize = ref("0 MB");
 const toast = useToast();
 const has2FA = ref(false);
+const openFilePicker = ref(false);
 
 const logout = function () {
     sessionStore.logout();

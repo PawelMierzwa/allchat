@@ -104,7 +104,7 @@ export default {
                 this.passphrase = this.passphrase.replace(/_+/g, '_').replace(/ +/g, ' ').trim();
                 return;
             }
-            if (this.passphrase.length >= 3 && this.passphrase.length < 32) {
+            if (this.passphrase.length >= 3 && this.passphrase.length <= 32) {
                 this.loadRoom = true;
                 // hash the passphrase and send it to the server
                 crypto.subtle.digest('SHA-1', new TextEncoder().encode(this.passphrase)).then(hashBuffer => {
