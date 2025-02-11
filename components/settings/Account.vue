@@ -1,5 +1,6 @@
 <template>
-    <div class="flex flex-col justify-between gap-4 py-4 px-5 bg-gray-100 dark:bg-gray-900 rounded-md">
+    <div
+        class="flex flex-col justify-between gap-4 py-4 px-5 scroll bg-gray-100 h-[50vh] overflow-y-auto dark:bg-gray-900 rounded-md">
         <h2 class="text-lg">Profile</h2>
         <div class="flex flex-row items-center gap-4">
             <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'" :alt="user.name.toUpperCase()"
@@ -44,14 +45,17 @@
         <h2 class="text-lg">Security</h2>
         <div class="flex flex-col gap-1">
             <p>Two-Factor Authentication</p>
-            <UButton variant="soft" color="green" class="w-fit" v-if="!has2FA">Enable 2FA</UButton>
-            <UButton variant="soft" color="red" class="w-fit" v-else>Disable 2FA</UButton>
+            <UButton variant="soft" color="green" class="w-fit" :disabled="true" v-if="!has2FA">Enable 2FA</UButton>
+            <UButton variant="soft" color="red" class="w-fit" :disabled="true" v-else>Disable 2FA</UButton>
         </div>
         <div class="flex flex-col gap-2 mt-4">
             <p>Change Password</p>
-            <UInput type="password" autocomplete="current-password" placeholder="Current Password" />
-            <UInput type="password" autocomplete="new-password" placeholder="New Password" />
-            <UButton color="primary" class="w-fit self-end" variant="link">Change</UButton>
+            <UInput @keyup.enter="focusNewPassword" type="password" autocomplete="current-password"
+                placeholder="Current Password" v-model="currentPassword" />
+            <UInput @keyup.enter="changePassword" type="password" autocomplete="new-password" placeholder="New Password"
+                id="newPasswordInput" v-model="newPassword" />
+            <UButton @click="changePassword" color="primary" :loading="loadingChangePassword"
+                loading-icon="i-mdi-loading" class="w-fit self-end" variant="link">Change</UButton>
         </div>
         <UDivider class="mt-2" />
         <h2 class="text-lg">Other</h2>
@@ -73,12 +77,25 @@ const fileSize = ref("0 MB");
 const toast = useToast();
 const has2FA = ref(false);
 const openFilePicker = ref(false);
+const newPassword = ref('');
+const currentPassword = ref('');
+const loadingChangePassword = ref(false);
 
 const logout = function () {
     sessionStore.logout();
     open.value = false;
     const router = useRouter();
     router.push('/');
+}
+
+onMounted(() => {
+    $fetch('/api/account/2fa').then((res) => {
+        has2FA.value = res.status === 200;
+    });
+});
+
+function focusNewPassword() {
+    document.getElementById('newPasswordInput').focus();
 }
 
 async function uploadProfilePicture() {
@@ -165,8 +182,8 @@ function processFile(file) {
     });
 }
 
-function deleteProfilePicture() {
-    $fetch('/api/account/avatar', {
+async function deleteProfilePicture() {
+    await $fetch('/api/account/avatar', {
         method: 'DELETE',
     }).then((res) => {
         if (res.status === 200) {
@@ -185,4 +202,48 @@ const handleFileUpload = (e) => {
         processFile(file);
     }
 }
+
+async function changePassword() {
+    if (loadingChangePassword.value) {
+        return;
+    }
+
+    if (newPassword.value.length < 8) {
+        toast.add({ title: 'Error', description: 'Password must be at least 8 characters long', color: 'red' });
+        return;
+    }
+
+    loadingChangePassword.value = true;
+
+    await $fetch('/api/account/changepassword', {
+        method: 'POST',
+        body: {
+            currentPassword: currentPassword.value,
+            newPassword: newPassword.value,
+        },
+    }).then((res) => {
+        setTimeout(() => {
+            loadingChangePassword.value = false;
+        }, 1000);
+        if (res.status === 200) {
+            toast.add({ title: 'Success', description: 'Password changed', color: 'green' });
+            currentPassword.value = '';
+            newPassword.value = '';
+        } else {
+            toast.add({ title: 'Error', description: res.message, color: 'red' });
+        }
+    });
+}
 </script>
+
+<style scoped>
+.scroll {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.gray.700') theme('colors.transparent');
+}
+
+.scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+</style>

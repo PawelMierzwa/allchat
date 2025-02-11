@@ -18,15 +18,6 @@ export default defineEventHandler(async (event) => {
         return { status: 401, message: 'Unauthorized' };
     }
 
-    const response = await $fetch.raw(useRuntimeConfig().imgUploadUrl + userId + '.webp', {
-        method: 'DELETE',
-        headers: {
-            'Auth-Secret': useRuntimeConfig().workerSecret,
-        },
-    });
-
-    return {
-        status: response.status,
-        message: response.status === 200 ? 'Avatar deleted successfully' : 'Error deleting avatar'
-    }
+    // TODO: Implement 2FA
+    return { status: 501, message: 'Not Implemented' };
 });
