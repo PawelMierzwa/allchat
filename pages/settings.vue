@@ -3,13 +3,19 @@
         <h1 class="text-3xl mb-8">Settings</h1>
         <UTabs :items="tabs" v-model="selectedTab" class="w-full scroll" v-if="isAuthenticated">
             <template #general>
-                <SettingsGeneral />
+                <div id="General">
+                    <SettingsGeneral />
+                </div>
             </template>
             <template #appearance>
-                <SettingsAppearance />
+                <div id="Appearance">
+                    <SettingsAppearance />
+                </div>
             </template>
             <template #account>
-                <SettingsAccount />
+                <div id="Account">
+                    <SettingsAccount />
+                </div>
             </template>
         </UTabs>
         <div v-else>
@@ -50,13 +56,16 @@ onMounted(() => {
         const tabIndex = tabs.findIndex(tab => tab.slot === hashValue);
         if (tabIndex !== -1) {
             selectedTab.value = tabIndex;
-            history.pushState("", document.title, window.location.pathname + window.location.search);
+            history.replaceState("", document.title, window.location.pathname + window.location.search);
         }
     }
 });
 
 definePageMeta({
     middleware: 'auth',
-    title: () => tabs[selectedTab.value].label + ' Settings',
 });
+
+useHead({
+    title: () => tabs[selectedTab.value].label + ' Settings',
+})
 </script>
