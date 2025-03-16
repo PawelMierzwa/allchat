@@ -28,6 +28,17 @@
                 </UDropdown>
             </ClientOnly>
         </nav>
+        <div v-if="showChangeNoteDialog" class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4 z-50">
+            <Suspense>
+                <ChangeNoteDialog @close="showChangeNoteDialog = false" />
+                <template #fallback>
+                    <div
+                        class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+                        <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
+                    </div>
+                </template>
+            </Suspense>
+        </div>
         <slot class="overflow-y-auto" />
         <footer class="bg-gray-900 text-gray-400 text-center p-4 mt-auto w-full">
             <p class="text-xs">&copy; {{ currentYear }} AllChat</p>
@@ -59,6 +70,7 @@ export default {
             const router = useRouter();
             router.push('/');
         }
+        const showChangeNoteDialog = ref(false);
 
         const items = [
             [{
@@ -76,7 +88,7 @@ export default {
                     label: 'Change Notes',
                     icon: 'i-mdi-clipboard-text',
                     click: () => {
-                        console.log('Change notes');
+                        showChangeNoteDialog.value = true;
                     }
                 },
                 {
@@ -103,7 +115,7 @@ export default {
             ]
         });
 
-        return { user, open, items, isAuthenticated };
+        return { user, open, items, isAuthenticated, showChangeNoteDialog };
     },
     computed: {
         currentYear() {
