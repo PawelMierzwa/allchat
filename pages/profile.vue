@@ -52,5 +52,9 @@ definePageMeta({
     middleware: 'auth',
 });
 
+useHead({
+    title: 'Your profile',
+});
+
 const { data, error } = await useFetch('/api/user/' + user.value.id + '/stats?size=lg');
 </script>

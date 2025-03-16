@@ -16,3 +16,14 @@
         </div>
     </UContainer>
 </template>
+
+<script setup>
+useHead({
+    title: 'About',
+});
+
+useSeoMeta({
+    title: 'About',
+    description: 'Learn more about AllChat.',
+});
+</script>

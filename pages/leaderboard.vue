@@ -30,9 +30,12 @@
 
 <script setup>
 definePageMeta({
-    title: 'Leaderboard',
     description: 'Check out the top users in AllChat!',
     middleware: 'auth',
+});
+
+useHead({
+    title: 'Leaderboard',
 });
 
 const { data, refresh } = useFetch('/api/leaderboard');
