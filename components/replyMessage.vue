@@ -1,16 +1,30 @@
 <template>
     <div :class="user.id === msg.sender.id ? 'mr-10' : 'ml-10'" class="whitespace-pre-wrap hybrid-break cursor-pointer"
-        title="Go to original message" @click="$emit('goto', replyMsg.originalMsg.id)">
-        <p :class="user.id === msg.sender.id ? 'text-end' : 'text-start'"
-            class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300">replying to {{ replyMsg.originalMsg.sender.name }}: {{
+        title="Go to original message" @click="$emit('goto', replyMsg.originalMsgId)">
+        <p v-if="replyMsg.originalMsg && replyMsg.originalMsg != true"
+            :class="user.id === msg.sender.id ? 'text-end' : 'text-start'"
+            class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300">
+            replying to {{ replyMsg.originalMsg.sender.name }}: {{
                 removeReplyTag(replyMsg.originalMsg.content) }}
+        </p>
+        <p v-else-if="replyMsg.originalMsg === true && fetchedOriginalMsg"
+            :class="user.id === msg.sender.id ? 'text-end' : 'text-start'"
+            class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300">
+            replying to {{ fetchedOriginalMsg.sender.name }}: {{
+                removeReplyTag(fetchedOriginalMsg.content) }}
+        </p>
+        <p v-else :class="user.id === msg.sender.id ? 'text-end' : 'text-start'"
+            class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300">
+            replying to a deleted message
         </p>
         <p>{{ replyMsg.content }}</p>
     </div>
 </template>
 
 <script setup>
-defineProps({
+const route = useRoute();
+
+const props = defineProps({
     msg: {
         type: Object,
         required: true,
@@ -28,4 +42,57 @@ defineProps({
 function removeReplyTag(msg) {
     return msg.replace(/<r:([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})>/g, '').trim();
 };
+
+async function fetchOriginalMsg() {
+    if (props.replyMsg.originalMsg === true) {
+        try {
+            const response = await $fetch(`/api/room/${route.params.id}/findMessage?msg=${props.replyMsg.originalMsgId}`);
+            if (response && response.searchedMsg) {
+                fetchedOriginalMsg.value = response.searchedMsg;
+
+                const sessionStore = useSessionStore();
+                const passphraseCache = computed(() => sessionStore.passphraseCache);
+                const encryptedData = Uint8Array.from(atob(fetchedOriginalMsg.value.content), c => c.charCodeAt(0));
+                const iv = Uint8Array.from(atob(fetchedOriginalMsg.value.iv), c => c.charCodeAt(0));
+                const decryptedContent = await decryptMessage(encryptedData, iv, passphraseCache.value);
+                fetchedOriginalMsg.value.content = decryptedContent;
+            }
+        } catch (error) {
+            console.error('Failed to fetch original message:', error);
+        }
+    }
+}
+
+async function hashKey(key) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(key);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return new Uint8Array(hash);
+}
+
+async function decryptMessage(encryptedData, iv, key) {
+    const hashedKey = await hashKey(key);
+    const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        hashedKey,
+        { name: 'AES-GCM' },
+        false,
+        ['decrypt']
+    );
+    const decryptedData = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        cryptoKey,
+        encryptedData
+    );
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedData);
+}
+
+const fetchedOriginalMsg = ref(null);
+
+onMounted(() => {
+    if (props.replyMsg.originalMsg === true) {
+        fetchOriginalMsg();
+    }
+})
 </script>

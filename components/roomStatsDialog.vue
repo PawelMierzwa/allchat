@@ -55,4 +55,13 @@ const props = defineProps({
 
 const { room, discover } = toRefs(props);
 const { data } = await useFetch(`/api/room/${room.value}/stats`);
+if (!discover.value) {
+    await $fetch(`/api/room/${room.value}/discoverer`).then((res) => {
+        if (res.code === 200) {
+            discover.value = res.discover;
+        } else {
+            discover.value = { username: 'Unknown', discoveredAt: 'Unknown' };
+        }
+    });
+}
 </script>

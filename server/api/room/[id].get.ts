@@ -21,6 +21,7 @@ export default defineEventHandler(async (event) => {
         userId = (decoded as jwt.JwtPayload).id;
     });
 
+
     const usersDb = useDatabase("users");
     // need to check if the user is allowed to view this match
     const unlockResult = await usersDb.sql`SELECT * FROM unlocks WHERE roomId = ${id} AND userId = ${userId}`;
@@ -30,31 +31,64 @@ export default defineEventHandler(async (event) => {
     }
 
     const msgDb = useDatabase("chat");
-    const messages = await msgDb.sql`SELECT * FROM messages WHERE roomId = ${id}`;
+    const query = getQuery(event);
+    let messages = null;
+    let hasMore = false;
+    let discover = false;
+    let discovererName = "";
+    let discoveredAt = "";
 
-    // get the room discoverer
-    const roomQuery = await msgDb.sql`SELECT * FROM rooms WHERE id = ${id}`;
-    const roomRows = roomQuery?.rows ?? [];
-    if (roomRows.length === 0) {
-        return { code: 404, message: 'Not Found' };
-    }
+    if (query.limit && !query.context) {
+        // get the last n messages
+        messages = await msgDb.sql`SELECT * FROM messages WHERE roomId = ${id} ORDER BY createdAt DESC LIMIT ${Number(query.limit) + 1}`;
+        if (messages.rows && messages.rows.length > Number(query.limit)) {
+            hasMore = true;
+            messages.rows = messages.rows.slice(0, Number(query.limit));
+        }
+    } else if (query.limit && query.context) {
+        const limit = Number(query.limit);
+        // get the next n messages before the context
+        messages = await msgDb.sql`SELECT * FROM messages WHERE roomId = ${id} AND createdAt < ${String(query.context)} ORDER BY createdAt DESC LIMIT ${limit + 1}`;
 
-    const room = roomRows[0];
-    const roomDiscoverer = room.discoveredBy;
-    const discoveredAt = room.discoveredAt;
-    const discovererQuery = await usersDb.sql`SELECT * FROM accounts WHERE id = ${roomDiscoverer as string}`;
-    const discovererRows = discovererQuery?.rows ?? [];
-    
-    let discovererName = "???";
-    if (discovererRows.length === 0) {
-        discovererName = "you";
+        if (messages.rows && messages.rows.length > limit) {
+            hasMore = true;
+            messages.rows = messages.rows.slice(0, limit);
+        }
     } else {
-        discovererName = discovererRows[0].username as string;
+        // last 50 messages and discoverer info
+        messages = await msgDb.sql`SELECT * FROM messages WHERE roomId = ${id} ORDER BY createdAt DESC LIMIT 26`;
+        if (messages.rows && messages.rows.length > 25) {
+            hasMore = true;
+            messages.rows = messages.rows.slice(0, 25);
+        }
+
+        // get the room discoverer
+        const roomQuery = await msgDb.sql`SELECT * FROM rooms WHERE id = ${id}`;
+        const roomRows = roomQuery?.rows ?? [];
+        if (roomRows.length === 0) {
+            return { code: 404, message: 'Not Found' };
+        }
+
+        const room = roomRows[0];
+
+        discover = true;
+        const roomDiscoverer = room.discoveredBy;
+        discoveredAt = room.discoveredAt as string;
+        const discovererQuery = await usersDb.sql`SELECT * FROM accounts WHERE id = ${roomDiscoverer as string}`;
+        const discovererRows = discovererQuery?.rows ?? [];
+
+        
+        if (discovererRows.length === 0) {
+            discovererName = "you";
+        } else {
+            discovererName = discovererRows[0].username as string;
+        }
     }
 
     if (!messages.rows || messages.rows.length === 0) {
-        return { code: 200, messages: [], discover: { username: discovererName, discoveredAt: discoveredAt } };
+        return { code: 200, messages: [], hasMore: false };
     }
+
     // format the messages to: { sender: { id: string, name: string }, content: string, createdAt: string }
     messages.rows = messages.rows?.map((msg: any) => {
         return {
@@ -62,10 +96,12 @@ export default defineEventHandler(async (event) => {
             sender: { id: msg.userId, name: msg.username },
             content: msg.message,
             createdAt: msg.createdAt,
-
             iv: msg.iv
         };
     });
 
-    return { code: 200, messages: messages.rows, discover: { username: discovererName, discoveredAt: discoveredAt } };
+    if (discover) {
+        return { code: 200, messages: messages.rows, discover: { username: discovererName, discoveredAt: discoveredAt } };
+    }
+    return { code: 200, messages: messages.rows, hasMore };
 });
