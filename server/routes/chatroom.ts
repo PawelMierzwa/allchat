@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
-
 const clients = new Map<string, { peer: any; room: string | null; rateLimiter: RateLimiter }>();
 const channels = new Map<string, { clients: Set<string>; gamemode: string | null }>();
 
@@ -80,8 +78,6 @@ export default defineWebSocketHandler({
                         channels.set(room_id, { clients: new Set(), gamemode: null });
                     }
                     channels.get(room_id)?.clients.add(clientId);
-
-                    console.log(`Client ${clientId} joined room: ${room_id}`);
                     peer.send(JSON.stringify({ status: 'joined', room_id }));
                 }
             } else if (action === 'leave') {
@@ -128,6 +124,5 @@ export default defineWebSocketHandler({
             channels.get(room)?.clients.delete(peer.id);
         }
         clients.delete(peer.id);
-        console.log(`Client disconnected: ${peer.id}`);
     },
 });

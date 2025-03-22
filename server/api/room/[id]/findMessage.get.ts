@@ -28,8 +28,6 @@ export default defineEventHandler(async (event) => {
         return { code: 401, message: 'Unauthorized' };
     }
 
-    console.log(`User ${userId} is trying to find a message in room ${roomId}`);
-
     const unlockResult = await usersDb.sql`SELECT * FROM unlocks WHERE roomId = ${roomId} AND userId = ${userId}`;
     const unlockRows = unlockResult?.rows ?? [];
     if (unlockRows.length === 0) {
