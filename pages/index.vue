@@ -1,7 +1,7 @@
 `<template>
     <UContainer class="my-auto pb-8 font-mono">
         <div class="mx-auto flex flex-col items-center justify-center w-fit">
-            <h1 class="text-7xl font-bold w-fit">AllChat</h1>
+            <h1 class="text-7xl font-bold w-fit dark:shadow-2xl dark:shadow-black">AllChat</h1>
             <UButton class="dark:text-gray-500 text-xs pt-0 self-end w-fit" @click="showRules = true" color="gray"
                 variant="link">
                 What's this?
@@ -73,6 +73,20 @@ export default {
 
         definePageMeta({
             middleware: 'auth',
+        });
+
+        useSeoMeta({
+            ogImage: '/small-bg.png',
+            description: 'Connect with the world using passphrases.',
+            ogTitle: 'AllChat',
+            ogDescription: 'Connect with the world using passphrases.',
+            icon: '/favicon.ico',
+            lang: 'en',
+            ogUrl: 'https://allchat.cc/',
+            twitterTitle: 'AllChat',
+            twitterDescription: 'Connect with the world using passphrases.',
+            twitterImage: '/small-bg.png',
+            twitterCard: 'summary',
         })
 
         return { isAuthenticated, startSession, user, toast, setPassphrase: sessionStore.setPassphraseCache };
