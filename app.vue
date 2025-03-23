@@ -1,12 +1,11 @@
 <template>
-  <div class="h-screen w-screen">
+  <UApp class="h-screen w-screen">
     <NuxtRouteAnnouncer />
     <NuxtLoadingIndicator :throttle="0" color="orange" />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <UNotifications />
-  </div>
+  </UApp>
 </template>
 
 <style>

@@ -12,7 +12,7 @@
             </p>
         </div>
         <div class="flex flex-col items-center justify-between mt-10 md:w-1/2 gap-4">
-            <p>This website is source-available, with it's <NuxtLink to="https://github.com/pawelmierzwa/allchat" class="underline hover:text-gray-400">code available on GitHub.</NuxtLink></p>
+            <p>This website is source-available, with it's <NuxtLink to="https://github.com/pawelmierzwa/allchat" class="underline hover:text-neutral-400">code available on GitHub.</NuxtLink></p>
         </div>
     </UContainer>
 </template>

@@ -3,25 +3,25 @@
         <div class="w-full items-center relative justify-center flex gap-4">
             <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
             <div v-if="passphraseCache" class="absolute flex items-center right-0">
-                <UButton @click="showRoomStats = true" size="sm" class="w-8 h-8" color="gray" icon="i-mdi-chart-bar"
+                <UButton @click="showRoomStats = true" size="sm" class="w-8 h-8" color="neutral" icon="i-mdi-chart-bar"
                     variant="link" />
             </div>
         </div>
         <div v-if="passphraseCache"
-            class="px-2 md:px-4 w-full py-6 relative bg-gray-100 dark:bg-gray-900 h-[70vh] flex flex-col gap-4 rounded-lg shadow-lg ">
+            class="px-2 md:px-4 w-full py-6 relative bg-neutral-100 dark:bg-neutral-900 h-[70vh] flex flex-col gap-4 rounded-lg shadow-lg ">
             <div ref="messagesContainer" @scroll="handleScroll"
                 class="overflow-y-auto overflow-x-hidden h-full scrollbar flex flex-col gap-4 px-2">
                 <div v-if="isLoadingMessages" class="flex justify-center py-2">
-                    <UIcon name="i-mdi-loading" class="animate-spin text-xl text-gray-500" />
+                    <UIcon name="i-mdi-loading" class="animate-spin text-xl text-neutral-500" />
                 </div>
-                <div v-else-if="discover" class="text-center text-gray-500 text-sm">
+                <div v-else-if="discover" class="text-center text-neutral-500 text-sm">
                     <p>Room discovered by {{ discover.username }} at {{ discover.discoveredAt }}</p>
                 </div>
                 <div v-if="messages.length > 0" class="flex flex-col gap-4">
                     <template v-for="(msg, index) in messages" :key="msg.id" class="w-full">
-                        <div v-if="shouldShowDateDivider(index)" class="text-center text-gray-500 text-sm rounded-sm">
-                            <UDivider :label="formatDateDivider(messages[index].createdAt)" class="text-gray-500"
-                                :ui="{ label: 'text-gray-500 dark:text-gray-600' }" />
+                        <div v-if="shouldShowDateDivider(index)" class="text-center text-neutral-500 text-sm rounded-sm">
+                            <UDivider :label="formatDateDivider(messages[index].createdAt)" class="text-neutral-500"
+                                :ui="{ label: 'text-neutral-500 dark:text-neutral-600' }" />
                         </div>
                         <div :class="user.id === msg.sender.id ? 'self-end text-end' : ''"
                             class="flex flex-col gap-1 rounded-3xl w-fit" :ref="'message-' + msg.id">
@@ -31,7 +31,7 @@
                                 <UAvatar :src="useRuntimeConfig().public.imgUrl + msg.sender.id + '.webp'"
                                     :alt="msg.sender.name.toUpperCase()" size="md" class="cursor-pointer" />
                                 <div class="flex flex-col">
-                                    <span class="text-xs text-gray-500 w-fit" title="" @click.stop>
+                                    <span class="text-xs text-neutral-500 w-fit" title="" @click.stop>
                                         {{ toLocaleDate(msg.createdAt) }}
                                     </span>
                                     <span :class="user.id === msg.sender.id ? 'self-end' : ''"
@@ -52,13 +52,13 @@
                                     {{ msg.content }}
                                 </p>
                                 <UButton v-if="msgHovered === index" :padded="false" @click="setReplyTo(msg)" size="sm"
-                                    class="w-6 h-6" color="gray" icon="i-mdi-reply" title="Reply to this message"
+                                    class="w-6 h-6" color="neutral" icon="i-mdi-reply" title="Reply to this message"
                                     variant="link" />
                             </div>
                         </div>
                     </template>
                 </div>
-                <div v-else class="text-center text-gray-500">
+                <div v-else class="text-center text-neutral-500">
                     No messages yet.<br>
                     Be the first to send a message in this chat!
                 </div>
@@ -73,16 +73,16 @@
                 Please wait a moment before sending another message.
             </div>
             <div v-if="replyTo"
-                class="flex flex-row content-center items-center gap-2 p-2 text-sm bg-gray-100 dark:bg-gray-950/90 rounded-xl">
+                class="flex flex-row content-center items-center gap-2 p-2 text-sm bg-neutral-100 dark:bg-neutral-950/90 rounded-xl">
                 <p class="font-bold">Replying to {{ replyTo.sender.name }}:</p>
                 <p>{{ removeReplyTag(replyTo.content) }}</p>
-                <UButton @click="replyTo = null" color="gray" size="xs" class="text-xs self-end" variant="link"
+                <UButton @click="replyTo = null" color="neutral" size="xs" class="text-xs self-end" variant="link"
                     icon="i-heroicons-x-mark-16-solid" :padded="false" />
             </div>
             <UInput v-model="message" placeholder="Type a message..." @keyup.enter="sendMessage"
                 :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256" class="w-full">
                 <template #trailing>
-                    <UButton color="gray" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
+                    <UButton color="neutral" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
                 </template>
             </UInput>
         </div>
@@ -92,34 +92,34 @@
             <NuxtLink to="/" class="mt-2 text-primary-500 underline hover:text-primary-700">Home</NuxtLink>
         </div>
         <div v-if="wsDisconnected"
-            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
-            <div class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+            class="absolute top-0 left-0 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center">
+            <div class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
                 <p>Connection has been lost.</p>
-                <UButton @click="reconnect" color="gray" variant="link" class="mt-4">Reconnect</UButton>
+                <UButton @click="reconnect" color="neutral" variant="link" class="mt-4">Reconnect</UButton>
             </div>
         </div>
         <div v-else-if="selectedUser"
-            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
+            class="absolute top-0 left-0 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center gap-2 p-4"
             @click="selectedUser = null">
             <Suspense>
                 <MiniProfile :user="selectedUser" :room="$route.params.id" @close="selectedUser = null" @click.stop />
                 <template #fallback>
                     <div
-                        class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+                        class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
                         <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
                     </div>
                 </template>
             </Suspense>
         </div>
         <div v-else-if="showRoomStats"
-            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4"
+            class="absolute top-0 left-0 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center gap-2 p-4"
             @click="showRoomStats = false">
             <Suspense>
                 <RoomStatsDialog :room="$route.params.id" :discover="discover" @close="showRoomStats = false"
                     @click.stop />
                 <template #fallback>
                     <div
-                        class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+                        class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
                         <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
                     </div>
                 </template>
@@ -732,7 +732,7 @@ export default {
     }
 
     50% {
-        background-color: theme('colors.gray.200');
+        background-color: var(--color-neutral-200);
     }
 }
 
@@ -744,17 +744,17 @@ export default {
     }
 
     50% {
-        background-color: theme('colors.gray.800');
+        background-color: var(--color-neutral-200);
     }
 }
 
 .scrollbar {
     scrollbar-width: thin;
-    /* fix needed for light theme */
-    scrollbar-color: theme('colors.gray.800') theme('colors.transparent');
+    scrollbar-color: var(--color-neutral-300) var(--color-neutral-900);
 }
 
 .scrollbar::-webkit-scrollbar {
     width: 3px;
+    background-color: var(--color-neutral-900);
 }
 </style>

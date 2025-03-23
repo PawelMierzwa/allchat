@@ -1,9 +1,9 @@
 <template>
     <div
-        class="flex flex-col items-center justify-center gap-2 h-96 w-[26rem] px-8 py-4 bg-gray-100 dark:bg-gray-950/90 rounded-xl">
+        class="flex flex-col items-center justify-center gap-2 h-96 w-[26rem] px-8 py-4 bg-neutral-100 dark:bg-neutral-950/90 rounded-xl">
         <h2 class="self-start text-lg font-bold text-primary-500">Room {{ room.substring(0, 8) }} stats</h2>
-        <p class="text-gray-500 text-sm text-start">Please note that the statistics are updated every few hours.</p>
-        <UDivider />
+        <p class="text-neutral-500 text-sm text-start">Please note that the statistics are updated every few hours.</p>
+        <USeparator />
         <table v-if="data.stats" class="w-full table-fixed [&>*>tr>td]:py-1">
             <tbody>
                 <tr>
@@ -36,7 +36,7 @@
             <p>Loading room stats...</p>
             <UIcon name="i-mdi-loading" class="animate-spin" />
         </div>
-        <UButton @click="$emit('close')" class="text-gray-100 hover:text-gray-300 dark:text-gray-400" color="gray"
+        <UButton @click="$emit('close')" class="text-neutral-100 hover:text-neutral-300 dark:text-neutral-400" color="neutral"
             variant="link">Close</UButton>
     </div>
 </template>

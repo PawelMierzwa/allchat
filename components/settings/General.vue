@@ -1,20 +1,20 @@
 <template>
-    <div class="flex flex-col justify-between gap-4 w-full p-4 bg-gray-100 dark:bg-gray-900 rounded-md">
+    <div class="flex flex-col justify-between gap-4 w-full p-4 bg-neutral-100 dark:bg-neutral-900 rounded-md">
         <div class="flex flex-row items-center justify-between gap-4">
             <p class="text-center">Language</p>
-            <USelect size="lg" v-model="language" :options="languages" @change="handleLanguageChange" />
+            <USelect size="lg" v-model="language" :items="languages" @change="handleLanguageChange" />
         </div>
         <div class="flex my-1 flex-row items-center justify-between gap-4">
             <p class="text-center">Link previews</p>
-            <UToggle size="lg" v-model="linkPreviews" @change="handleLPChange" />
+            <USwitch size="lg" v-model="linkPreviews" @change="handleLPChange" />
         </div>
         <div class="flex my-1 flex-row items-center justify-between gap-4">
             <p class="text-center">Sound notifications</p>
-            <UToggle size="lg" v-model="soundOn" @change="handleSoundOnChange" />
+            <USwitch size="lg" v-model="soundOn" @change="handleSoundOnChange" />
         </div>
         <div class="flex flex-row items-center justify-between gap-4">
-            <p :data-sound="soundOn" class="text-center data-[sound=false]:text-gray-500 data-[sound=false]:cursor-not-allowed">Notification sound</p>
-            <USelect size="lg" v-model="selectedNotif" :options="notificationSounds" :disabled="!soundOn" @change="handleNotifChange" class="hover:cursor-pointer" />
+            <p :data-sound="soundOn" class="text-center data-[sound=false]:text-neutral-500 data-[sound=false]:cursor-not-allowed">Notification sound</p>
+            <USelect size="lg" v-model="selectedNotif" :items="notificationSounds" :disabled="!soundOn" @change="handleNotifChange" class="hover:cursor-pointer" />
         </div>
     </div>
 </template>
@@ -22,8 +22,11 @@
 <script setup>
 const languages = ['en', 'pl', 'fr', 'ua', 'de', 'es', 'it', 'de'];
 const language = ref('en');
+const { setLocale } = useI18n();
+
 function handleLanguageChange() {
-    localStorage.setItem('language', language.value);
+    localStorage.setItem('locale', language.value);
+    setLocale(language.value);
 }
 
 const linkPreviews = ref(true);
@@ -49,7 +52,7 @@ function handleNotifChange() {
 }
 
 onMounted(() => {
-    const storedLang = localStorage.getItem('language');
+    const storedLang = localStorage.getItem('locale');
     if (storedLang) {
         language.value = storedLang;
     }

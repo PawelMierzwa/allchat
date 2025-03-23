@@ -1,6 +1,6 @@
 <template>
     <div
-        class="flex flex-col justify-between gap-4 py-4 px-5 scroll bg-gray-100 h-[50vh] overflow-y-auto dark:bg-gray-900 rounded-md">
+        class="flex flex-col justify-between gap-4 py-4 px-5 scroll bg-neutral-100 h-[50vh] overflow-y-auto dark:bg-neutral-900 rounded-md">
         <h2 class="text-lg">Profile</h2>
         <div class="flex flex-row items-center gap-4">
             <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'" :alt="user.name.toUpperCase()"
@@ -13,40 +13,45 @@
         <form class="flex flex-col justify-between gap-4 w-full">
             <div class="row" style="gap: 5px; align-items: center;">
                 <div class="flex flex-row items-center gap-1">
-                    <UButton color="primary" variant="soft" rounded="xl"
-                        @click="openFilePicker = true; fileSize = '0 MB'">
-                        Update Profile Picture
-                    </UButton>
-                    <UButton variant="soft" color="red" title="Delete profile picture" @click="deleteProfilePicture">
-                        <UIcon size="xl" class="text-xl" name="mdi-trash-can-outline" />
+                    <UModal v-model:open="openFilePicker" title="Upload Profile Picture">
+                        <UButton color="primary" variant="soft" rounded="xl" @click="fileSize = '0 MB'">
+                            Update Profile Picture
+                        </UButton>
+                        <template #content>
+                            <UCard id="upload-card" class="border dark:border-neutral-700">
+                                <div ref="imagePreviews" id="imagePreviews"
+                                    :class="scaledPicture != null ? 'mb-2' : ''">
+                                </div>
+                                <UInput type="file" @change="handleFileUpload" size="lg" accept="image/png, image/jpeg"
+                                    icon="mdi-arrow-expand-up" label="Upload photo" id="file-upload" required>
+                                    <template #trailing>
+                                        <span class="text-neutral-500 dark:text-neutral-400 text-xs">
+                                            {{ fileSize }}
+                                        </span>
+                                    </template>
+                                </UInput>
+                                <template #footer>
+                                    <div class="flex flex-row items-center justify-between gap-4">
+                                        <UButton :disabled="!scaledPicture" color="primary" class="disabled:cursor-not-allowed"
+                                            @click="uploadProfilePicture(); openFilePicker = false">Upload</UButton>
+                                        <UButton variant="subtle" color="error" @click="openFilePicker = false">Close</UButton>
+                                    </div>
+                                </template>
+                            </UCard>
+                        </template>
+                    </UModal>
+                    <UButton variant="soft" color="error" title="Delete profile picture" @click="deleteProfilePicture">
+                        <UIcon size="xl" class="text-xl" name="i-mdi-trash-can-outline" />
                     </UButton>
                 </div>
-                <UModal v-model="openFilePicker">
-                    <UCard id="upload-card" class="border">
-                        <div ref="imagePreviews" id="imagePreviews" :class="scaledPicture != null ? 'mb-2' : ''"></div>
-                        <UInput type="file" @change="handleFileUpload" size="lg" accept="image/png, image/jpeg"
-                            icon="mdi-arrow-expand-up" label="Upload photo" id="file-upload" required>
-                            <template #trailing>
-                                <span class="text-gray-500 dark:text-gray-400 text-xs">{{ fileSize }}</span>
-                            </template>
-                        </UInput>
-                        <template #footer>
-                            <div class="flex flex-row items-center justify-between gap-4">
-                                <UButton :disabled="!scaledPicture" color="primary"
-                                    @click="uploadProfilePicture(); openFilePicker = false">Upload</UButton>
-                                <UButton color="gray" @click="openFilePicker = false">Close</UButton>
-                            </div>
-                        </template>
-                    </UCard>
-                </UModal>
             </div>
         </form>
-        <UDivider class="mt-2" />
+        <USeparator class="mt-2" />
         <h2 class="text-lg">Security</h2>
         <div class="flex flex-col gap-1">
             <p>Two-Factor Authentication</p>
-            <UButton variant="soft" color="green" class="w-fit" :disabled="true" v-if="!has2FA">Enable 2FA</UButton>
-            <UButton variant="soft" color="red" class="w-fit" :disabled="true" v-else>Disable 2FA</UButton>
+            <UButton variant="soft" color="success" class="w-fit" :disabled="true" v-if="!has2FA">Enable 2FA</UButton>
+            <UButton variant="soft" color="error" class="w-fit" :disabled="true" v-else>Disable 2FA</UButton>
         </div>
         <div class="flex flex-col gap-2 mt-4">
             <p>Change Password</p>
@@ -57,11 +62,11 @@
             <UButton @click="changePassword" color="primary" :loading="loadingChangePassword"
                 loading-icon="i-mdi-loading" class="w-fit self-end" variant="link">Change</UButton>
         </div>
-        <UDivider class="mt-2" />
+        <USeparator class="mt-2" />
         <h2 class="text-lg">Other</h2>
         <div class="flex flex-row gap-2">
             <UButton variant="outline" class="w-fit" @click="logout">Logout</UButton>
-            <UButton color="red" variant="soft" class="w-fit">Delete Account</UButton>
+            <UButton color="error" variant="soft" class="w-fit">Delete Account</UButton>
         </div>
     </div>
 </template>
@@ -239,7 +244,7 @@ async function changePassword() {
 <style scoped>
 .scroll {
     scrollbar-width: thin;
-    scrollbar-color: theme('colors.gray.700') theme('colors.transparent');
+    scrollbar-color: var(--color-neutral-700);
 }
 
 .scroll::-webkit-scrollbar {

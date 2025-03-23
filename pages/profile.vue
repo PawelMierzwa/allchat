@@ -2,7 +2,7 @@
     <UContainer class="flex flex-col justify-between my-auto font-mono">
         <h1 class="text-5xl text-center">Profile</h1>
         <div
-            class="flex flex-col items-center justify-between mt-10 w-full p-8 bg-gray-100 dark:bg-gray-900 rounded-md">
+            class="flex flex-col items-center justify-between mt-10 w-full p-8 bg-neutral-100 dark:bg-neutral-900 rounded-md">
             <div class="flex flex-row items-center justify-between lg:gap-16 md:gap-8 gap-4">
                 <div>
                     <div class="flex items-center gap-4">
@@ -10,13 +10,13 @@
                             :alt="user.name.toUpperCase()" size="3xl" />
                         <div>
                             <h2 class="text-3xl">{{ user.name }}</h2>
-                            <p class="text-gray-500">{{ user.email }}</p>
+                            <p class="text-neutral-500">{{ user.email }}</p>
                         </div>
                     </div>
                 </div>
                 <UButton variant="link" to="/settings#Account">Edit profile</UButton>
             </div>
-            <UDivider class="my-4 w-1/2" />
+            <USeparator class="my-4 w-1/2" />
             <div v-if="data.stats" class="flex flex-col items-center justify-between">
                 <h3 class="text-xl">Stats</h3>
                 <table class="[&>*>tr>td]:p-2 w-full h-full">

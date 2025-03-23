@@ -3,7 +3,7 @@
     <h1 class="text-5xl text-center" v-if="data">{{ data.username + "'s profile" }}</h1>
     <h1 class="text-5xl text-center" v-else>Loading...</h1>
     <div v-if="data"
-      class="flex flex-col items-center justify-between mt-10 w-full p-8 bg-gray-100 dark:bg-gray-900 rounded-md">
+      class="flex flex-col items-center justify-between mt-10 w-full p-8 bg-neutral-100 dark:bg-neutral-900 rounded-md">
       <div class="flex flex-row items-center justify-between lg:gap-16 md:gap-8 gap-4">
         <div>
           <div class="flex items-center gap-4">

@@ -1,6 +1,6 @@
 <template>
     <UContainer
-        class="flex flex-col relative bg-gray-100 dark:bg-gray-950/90 rounded-xl items-center justify-between w-80 px-12 py-8">
+        class="flex flex-col relative bg-neutral-100 dark:bg-neutral-950/90 rounded-xl items-center justify-between w-80 px-12 py-8">
         <UButton class="absolute top-2 right-2" @click="$emit('close')" variant="link" icon="i-heroicons-x-mark" />
         <h2 class="text-2xl mb-4">Create your<br>AllChat account</h2>
         <div class="flex flex-col space-y-4">
@@ -13,7 +13,7 @@
             class="data-[error='']:my-4">Register
         </UButton>
         <p class="text-red-600 text-center my-2">{{ errorMsg }}</p>
-        <UButton class="text-primary-500 hover:text-primary-800 absolute bottom-2 cursor-pointer"
+        <UButton class="text-primary-500 hover:text-primary-700 absolute bottom-2 hover:underline transition-none"
             @click="$emit('hasAcc')" variant="link">Already have an account?</UButton>
     </UContainer>
 </template>

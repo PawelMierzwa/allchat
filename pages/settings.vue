@@ -1,7 +1,7 @@
 <template>
-    <UContainer class="flex flex-col items-center pt-16 md:p-22 font-mono">
+    <UContainer class="flex flex-col items-center my-auto font-mono">
         <h1 class="text-3xl mb-8">Settings</h1>
-        <UTabs :items="tabs" v-model="selectedTab" class="w-full scroll" v-if="isAuthenticated">
+        <UTabs :items="tabs" size="lg" :content="true" default-value="0" v-model="selectedTab" class="w-full scroll" v-if="isAuthenticated">
             <template #general>
                 <div id="General">
                     <SettingsGeneral />
@@ -48,14 +48,14 @@ const tabs = [
 ];
 
 const isAuthenticated = computed(() => useSessionStore().isAuthenticated);
-const selectedTab = ref(0);
+const selectedTab = ref('0');
 
 onMounted(() => {
     if (window.location.hash) {
         const hashValue = window.location.hash.slice(1).toLowerCase();
         const tabIndex = tabs.findIndex(tab => tab.slot === hashValue);
         if (tabIndex !== -1) {
-            selectedTab.value = tabIndex;
+            selectedTab.value = String(tabIndex);
             history.replaceState("", document.title, window.location.pathname + window.location.search);
         }
     }

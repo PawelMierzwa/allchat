@@ -17,8 +17,8 @@ const { data } = await useFetch(`/api/user/${user.value.id}/stats?room=${room.va
 
 <template>
     <UContainer
-        class="flex flex-col items-center justify-center relative gap-4 w-80 px-12 py-4 bg-gray-100 dark:bg-gray-950/90 rounded-xl">
-        <NuxtLink class="flex flex-row items-center justify-between w-full gap-4 p-2" color="gray"
+        class="flex flex-col items-center justify-center relative gap-4 w-80 px-12 py-4 bg-neutral-100 dark:bg-neutral-950/90 rounded-xl">
+        <NuxtLink class="flex flex-row items-center justify-between w-full gap-4 p-2" color="neutral"
             :to="'/user/' + user.id">
             <h2 class="self-start font-bold">{{ user.name }}</h2>
             <UIcon name="i-mdi-account" />
@@ -51,7 +51,7 @@ const { data } = await useFetch(`/api/user/${user.value.id}/stats?room=${room.va
             <p>Loading user data...</p>
             <UIcon name="i-mdi-loading" class="animate-spin" />
         </div>
-        <UButton @click="$emit('close')" class="text-gray-100 hover:text-gray-300 dark:text-gray-400" color="gray"
+        <UButton @click="$emit('close')" class="text-neutral-100 hover:text-neutral-300 dark:text-neutral-400" color="neutral"
             variant="link">Close</UButton>
     </UContainer>
 </template>
