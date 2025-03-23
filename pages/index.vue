@@ -2,48 +2,53 @@
     <UContainer class="my-auto pb-8 font-mono">
         <div class="mx-auto flex flex-col items-center justify-center w-fit">
             <h1 class="text-7xl font-bold w-fit">AllChat</h1>
-            <UButton class="dark:text-gray-500 text-xs pt-0 self-end w-fit" @click="showRules = true" color="gray"
-                variant="link">
-                What's this?
+            <UButton
+                class="dark:text-neutral-500 text-xs pt-0 hover:underline transition-none self-end w-fit"
+                @click="showRules = true" color="neutral" variant="link">
+                {{ $t('index.whatsthis') }}
             </UButton>
         </div>
         <div v-if="!loadRoom"
-            class="mt-6 flex flex-col items-center justify-center bg-gray-100 dark:bg-zinc-900 p-8 rounded-xl ring-1 ring-primary-500 w-fit mx-auto">
-            <h2 class="text-2xl w-fit mx-auto">enter passphrase:</h2>
-            <UInput size="lg" v-model.trim="passphrase" @keydown="inputKeydown($event)" placeholder="Secret_room_2137"
-                class="w-72 mx-auto mt-4 caret-primary" @keyup.enter="enterRoom" maxlength="32"
-                :ui="{ icon: { trailing: { pointer: '' } } }">
+            class="mt-6 flex flex-col items-center justify-center bg-neutral-100 dark:bg-zinc-900 p-8 rounded-xl ring-1 ring-primary-500 w-fit mx-auto">
+            <h2 class="text-2xl w-fit mx-auto">{{ $t('index.passphrase') }}</h2>
+            <UInput size="lg" v-model.trim="passphrase" @keydown="inputKeydown($event)"
+                :placeholder="$t('index.placeholder')" class="w-72 mx-auto mt-4 caret-primary" @keyup.enter="enterRoom"
+                maxlength="32" :ui="{ icon: { trailing: { pointer: '' } } }">
                 <template #trailing>
-                    <UButton v-show="showEnterButton" color="gray" variant="link" icon="i-mdi-arrow-right-circle"
-                        :padded="false" @click="enterRoom" />
+                    <UButton v-if="passphrase?.length >= 3" aria-label="Enter a room" size="sm"
+                        color="neutral" variant="link" icon="i-mdi-arrow-right-circle" :padded="false"
+                        @click="enterRoom" />
                 </template>
             </UInput>
-            <UButton class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
-                @click="enterRoom" v-if="showEnterButton && isAuthenticated" variant="link">
-                Enter the room
+            <UButton
+                class="text-primary-500 hover:text-primary-700 mt-4 text-sm w-fit hover:underline transition-none"
+                @click="enterRoom" v-if="passphrase?.length >= 3 && isAuthenticated" variant="link">
+                {{ $t('index.enter') }}
             </UButton>
-            <UButton class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
+            <UButton
+                class="text-primary-500 hover:text-primary-700 mt-4 text-sm w-fit hover:underline transition-none"
                 @click="showLogin = true" v-if="!isAuthenticated" variant="link">
-                Login to join a room
+                {{ $t('index.login') }}
             </UButton>
         </div>
         <div class="mx-auto mt-8 flex flex-col items-center justify-center" v-else>
-            <h2 class="text-3xl">Loading room...</h2>
+            <h2 class="text-3xl">{{ $t('index.loading') }}</h2>
             <UIcon name="i-mdi-loading" class="animate-spin text-4xl mx-auto mt-8" />
-            <UButton color="gray" variant="link" @click="loadRoom = false" class="mt-10">Cancel</UButton>
+            <UButton color="neutral" variant="link" @click="loadRoom = false"
+                class="mt-10 cursor-pointer hover:underline transition-none">{{ $t('generic.cancel') }}</UButton>
         </div>
         <div v-if="showLogin"
-            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
+            class="absolute top-0 left-0 z-50 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center">
             <LoginDialog @login="handleLogin" @noAcc="showLogin = false; showRegister = true"
                 @close="showLogin = false" />
         </div>
         <div v-else-if="showRegister"
-            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
+            class="absolute top-0 left-0 z-50 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center">
             <RegisterDialog @register="handleRegister" @hasAcc="showRegister = false; showLogin = true"
                 @close="showRegister = false" />
         </div>
         <div v-else-if="showRules"
-            class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center">
+            class="absolute top-0 left-0 z-50 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center">
             <RulesDialog @close="showRules = false" />
         </div>
     </UContainer>
@@ -94,11 +99,6 @@ export default {
     watch: {
         passphrase(val) {
             this.passphrase = val.replace(/[^a-zA-Z0-9_]/g, '');
-        }
-    },
-    computed: {
-        showEnterButton() {
-            return this.passphrase.length >= 3;
         }
     },
     methods: {

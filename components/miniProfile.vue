@@ -26,32 +26,32 @@ const { data } = await useFetch(`/api/user/${user.value.id}/stats?room=${room.va
         <table v-if="data.stats" class="[&>*>tr>td]:px-2">
             <tbody>
                 <tr>
-                    <td>Messages sent</td>
+                    <td>{{ $t('profile.messages') }}</td>
                     <td>{{ data.stats.totalMessages }}</td>
                 </tr>
                 <tr>
-                    <td>Messages sent in this room</td>
+                    <td>{{ $t('profile.sentInRoom') }}</td>
                     <td>{{ data.stats.totalRoomMessages }}</td>
                 </tr>
                 <tr>
-                    <td>Rooms created</td>
+                    <td>{{ $t('profile.rooms') }}</td>
                     <td>{{ data.stats.totalRoomsDiscovered }}</td>
                 </tr>
                 <tr>
-                    <td>Rooms joined</td>
+                    <td>{{ $t('profile.joined') }}</td>
                     <td>{{ data.stats.totalRoomsJoined }}</td>
                 </tr>
             </tbody>
         </table>
         <div v-else-if="data.message" class="text-center">
-            <p>Error fetching user data</p>
+            <p>{{ $t('profile.error') }}</p>
             <p class="text-red-300">{{ data.message }}</p>
         </div>
         <div v-else>
-            <p>Loading user data...</p>
+            <p>{{ $t('profile.loadingStats') }}</p>
             <UIcon name="i-mdi-loading" class="animate-spin" />
         </div>
         <UButton @click="$emit('close')" class="text-neutral-100 hover:text-neutral-300 dark:text-neutral-400" color="neutral"
-            variant="link">Close</UButton>
+            variant="link">{{ $t('generic.close') }}</UButton>
     </UContainer>
 </template>

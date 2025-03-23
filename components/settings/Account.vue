@@ -1,7 +1,7 @@
 <template>
     <div
         class="flex flex-col justify-between gap-4 py-4 px-5 scroll bg-neutral-100 h-[50vh] overflow-y-auto dark:bg-neutral-900 rounded-md">
-        <h2 class="text-lg">Profile</h2>
+        <h2 class="text-lg">{{ $t('settings.profile') }}</h2>
         <div class="flex flex-row items-center gap-4">
             <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'" :alt="user.name.toUpperCase()"
                 size="lg" />
@@ -15,7 +15,7 @@
                 <div class="flex flex-row items-center gap-1">
                     <UModal v-model:open="openFilePicker" title="Upload Profile Picture">
                         <UButton color="primary" variant="soft" rounded="xl" @click="fileSize = '0 MB'">
-                            Update Profile Picture
+                            {{ $t('settings.updatePicture') }}
                         </UButton>
                         <template #content>
                             <UCard id="upload-card" class="border dark:border-neutral-700">
@@ -32,9 +32,11 @@
                                 </UInput>
                                 <template #footer>
                                     <div class="flex flex-row items-center justify-between gap-4">
-                                        <UButton :disabled="!scaledPicture" color="primary" class="disabled:cursor-not-allowed"
+                                        <UButton :disabled="!scaledPicture" color="primary"
+                                            class="disabled:cursor-not-allowed"
                                             @click="uploadProfilePicture(); openFilePicker = false">Upload</UButton>
-                                        <UButton variant="subtle" color="error" @click="openFilePicker = false">Close</UButton>
+                                        <UButton variant="subtle" color="error" @click="openFilePicker = false">{{
+                                            $t('generic.close') }}</UButton>
                                     </div>
                                 </template>
                             </UCard>
@@ -47,26 +49,29 @@
             </div>
         </form>
         <USeparator class="mt-2" />
-        <h2 class="text-lg">Security</h2>
+        <h2 class="text-lg">{{ $t('settings.security') }}</h2>
         <div class="flex flex-col gap-1">
-            <p>Two-Factor Authentication</p>
-            <UButton variant="soft" color="success" class="w-fit" :disabled="true" v-if="!has2FA">Enable 2FA</UButton>
-            <UButton variant="soft" color="error" class="w-fit" :disabled="true" v-else>Disable 2FA</UButton>
+            <p>{{ $t('settings.twoFA') }}</p>
+            <UButton variant="soft" color="success" class="w-fit" :disabled="true" v-if="!has2FA">{{
+                $t('settings.enable2FA') }}
+            </UButton>
+            <UButton variant="soft" color="error" class="w-fit" :disabled="true" v-else>{{ $t('settings.disable2FA') }}
+            </UButton>
         </div>
         <div class="flex flex-col gap-2 mt-4">
-            <p>Change Password</p>
+            <p>{{ $t('settings.changePassword') }}</p>
             <UInput @keyup.enter="focusNewPassword" type="password" autocomplete="current-password"
-                placeholder="Current Password" v-model="currentPassword" />
-            <UInput @keyup.enter="changePassword" type="password" autocomplete="new-password" placeholder="New Password"
-                id="newPasswordInput" v-model="newPassword" />
+                :placeholder="$t('settings.currentPassword')" v-model="currentPassword" />
+            <UInput @keyup.enter="changePassword" type="password" autocomplete="new-password"
+                :placeholder="$t('settings.newPassword')" id="newPasswordInput" v-model="newPassword" />
             <UButton @click="changePassword" color="primary" :loading="loadingChangePassword"
-                loading-icon="i-mdi-loading" class="w-fit self-end" variant="link">Change</UButton>
+                loading-icon="i-mdi-loading" class="w-fit self-end" variant="link">{{ $t('settings.change') }}</UButton>
         </div>
         <USeparator class="mt-2" />
-        <h2 class="text-lg">Other</h2>
+        <h2 class="text-lg">{{ $t('settings.other') }}</h2>
         <div class="flex flex-row gap-2">
-            <UButton variant="outline" class="w-fit" @click="logout">Logout</UButton>
-            <UButton color="error" variant="soft" class="w-fit">Delete Account</UButton>
+            <UButton variant="outline" class="w-fit" @click="logout">{{ $t('generic.logout') }}</UButton>
+            <UButton color="error" variant="soft" class="w-fit">{{ $t('settings.deleteAccount') }}</UButton>
         </div>
     </div>
 </template>
@@ -85,6 +90,7 @@ const openFilePicker = ref(false);
 const newPassword = ref('');
 const currentPassword = ref('');
 const loadingChangePassword = ref(false);
+const { t } = useI18n();
 
 const logout = function () {
     sessionStore.logout();
@@ -117,7 +123,7 @@ async function uploadProfilePicture() {
     }
 
     if (picture.value.size > 2000000) {
-        toast.add({ title: 'Error', description: 'File size must be less than 2 MB', color: 'red' });
+        toast.add({ title: t('generic.error'), description: t('settings.fileSizeError'), color: 'error' });
         return;
     }
 
@@ -131,9 +137,9 @@ async function uploadProfilePicture() {
         });
         if (res.status === 200) {
             loading.value = false;
-            toast.add({ title: 'Success', description: 'Profile picture updated', color: 'green' });
+            toast.add({ title: t('generic.success'), description: t('settings.pictureUpdated'), color: 'success' });
         } else {
-            toast.add({ title: 'Error', description: 'Failed to upload profile picture', color: 'red' });
+            toast.add({ title: t('generic.error'), description: t('settings.pictureFailed'), color: 'error' });
         }
     }, 'image/webp');
 }
@@ -178,7 +184,7 @@ function processFile(file) {
                 resolve({ imageURL, scaledImg });
             });
             scaledImg.setAttribute("src", imageURL);
-            scaledImg.setAttribute("alt", "Preview of the image you are about to upload");
+            scaledImg.setAttribute("alt", t('settings.imgPreview'));
             scaledImg.setAttribute("class", "preview-image");
         });
     }).then((data) => {
@@ -192,9 +198,9 @@ async function deleteProfilePicture() {
         method: 'DELETE',
     }).then((res) => {
         if (res.status === 200) {
-            toast.add({ title: 'Success', description: 'Profile picture deleted', color: 'green' });
+            toast.add({ title: t('generic.success'), description: t('settings.pictureDeleted'), color: 'success' });
         } else {
-            toast.add({ title: 'Error', description: 'Failed to delete profile picture', color: 'red' });
+            toast.add({ title: t('generic.error'), description: t('settings.failedToDelete'), color: 'error' });
         }
     });
 }
@@ -214,7 +220,7 @@ async function changePassword() {
     }
 
     if (newPassword.value.length < 8) {
-        toast.add({ title: 'Error', description: 'Password must be at least 8 characters long', color: 'red' });
+        toast.add({ title: t('generic.error'), description: t('settings.passwordLength'), color: 'error' });
         return;
     }
 
@@ -231,11 +237,11 @@ async function changePassword() {
             loadingChangePassword.value = false;
         }, 1000);
         if (res.status === 200) {
-            toast.add({ title: 'Success', description: 'Password changed', color: 'green' });
+            toast.add({ title: t('generic.success'), description: t('settings.passwordChanged'), color: 'success' });
             currentPassword.value = '';
             newPassword.value = '';
         } else {
-            toast.add({ title: 'Error', description: res.message, color: 'red' });
+            toast.add({ title: t('generic.error'), description: res.message, color: 'error' });
         }
     });
 }

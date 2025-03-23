@@ -1,6 +1,6 @@
 <template>
     <UContainer class="flex flex-col items-center my-auto font-mono">
-        <h1 class="text-3xl mb-8">Settings</h1>
+        <h1 class="text-3xl mb-8">{{ $t('settings.title') }}</h1>
         <UTabs :items="tabs" size="lg" :content="true" default-value="0" v-model="selectedTab" class="w-full scroll" v-if="isAuthenticated">
             <template #general>
                 <div id="General">
@@ -19,10 +19,10 @@
             </template>
         </UTabs>
         <div v-else>
-            <p class="text-center">You need to be logged in to access this page</p>
+            <p class="text-center">{{ $t('settings.login') }}</p>
             <NuxtLink to="/" class="text-primary-500 hover:text-primary-800 mt-4 text-sm w-fit cursor-pointer"
                 variant="link">
-                Go back
+                {{ $t('generic.goBack') }}
             </NuxtLink>
         </div>
     </UContainer>
@@ -65,7 +65,9 @@ definePageMeta({
     middleware: 'auth',
 });
 
+const { t } = useI18n();
+
 useHead({
-    title: () => tabs[selectedTab.value].label + ' Settings',
+    title: () => tabs[selectedTab.value].label + ' ' + t('settings.title'),
 })
 </script>

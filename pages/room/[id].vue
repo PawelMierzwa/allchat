@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col mx-auto px-0 items-center w-full md:w-4/5 lg:w-3/5 my-auto font-mono">
         <div class="w-full items-center relative justify-center flex gap-4">
-            <h1 class="text-xl mb-4 mt-4">Room {{ $route.params.id.slice(0, 8) }}</h1>
+            <h1 class="text-xl mb-4 mt-4">{{ $t('room.title') + ' ' + $route.params.id.slice(0, 8) }}</h1>
             <div v-if="passphraseCache" class="absolute flex items-center right-0">
                 <UButton @click="showRoomStats = true" size="sm" class="w-8 h-8" color="neutral" icon="i-mdi-chart-bar"
                     variant="link" />
@@ -15,18 +15,20 @@
                     <UIcon name="i-mdi-loading" class="animate-spin text-xl text-neutral-500" />
                 </div>
                 <div v-else-if="discover" class="text-center text-neutral-500 text-sm">
-                    <p>Room discovered by {{ discover.username }} at {{ discover.discoveredAt }}</p>
+                    <p>{{ $t('room.discoveredBy') + ' ' + discover.username }} {{ $t('generic.at') + ' ' +
+                        discover.discoveredAt }}</p>
                 </div>
                 <div v-if="messages.length > 0" class="flex flex-col gap-4">
                     <template v-for="(msg, index) in messages" :key="msg.id" class="w-full">
-                        <div v-if="shouldShowDateDivider(index)" class="text-center text-neutral-500 text-sm rounded-sm">
-                            <UDivider :label="formatDateDivider(messages[index].createdAt)" class="text-neutral-500"
+                        <div v-if="shouldShowDateDivider(index)"
+                            class="text-center text-neutral-500 text-sm rounded-sm">
+                            <USeparator :label="formatDateDivider(messages[index].createdAt)" class="text-neutral-500"
                                 :ui="{ label: 'text-neutral-500 dark:text-neutral-600' }" />
                         </div>
                         <div :class="user.id === msg.sender.id ? 'self-end text-end' : ''"
                             class="flex flex-col gap-1 rounded-3xl w-fit" :ref="'message-' + msg.id">
                             <div :class="user.id === msg.sender.id ? 'flex-row-reverse' : 'flex-row'"
-                                class="flex gap-2 items-center" title="Show profile"
+                                class="flex gap-2 items-center" :title="$t('room.showProfile')"
                                 @click="openMiniProfile(msg.sender)">
                                 <UAvatar :src="useRuntimeConfig().public.imgUrl + msg.sender.id + '.webp'"
                                     :alt="msg.sender.name.toUpperCase()" size="md" class="cursor-pointer" />
@@ -52,34 +54,34 @@
                                     {{ msg.content }}
                                 </p>
                                 <UButton v-if="msgHovered === index" :padded="false" @click="setReplyTo(msg)" size="sm"
-                                    class="w-6 h-6" color="neutral" icon="i-mdi-reply" title="Reply to this message"
+                                    class="w-6 h-6" color="neutral" icon="i-mdi-reply" :title="$t('room.reply')"
                                     variant="link" />
                             </div>
                         </div>
                     </template>
                 </div>
                 <div v-else class="text-center text-neutral-500">
-                    No messages yet.<br>
-                    Be the first to send a message in this chat!
+                    {{ $t('room.noMessages') }}<br>
+                    {{ $t('room.sayHi') }}
                 </div>
             </div>
             <div v-if="newMessages > 0" @click="scrollToBottom"
                 class="absolute bottom-24 left-1/2 -translate-x-1/2 bg-primary-50 text-primary-900 dark:bg-primary-900 dark:text-primary-50 rounded-full px-2 py-1 text-xs cursor-pointer">
                 <span>{{ newMessages > 10 ? '9+' : newMessages }}</span>
-                new {{ newMessages === 1 ? 'message' : 'messages' }}
+                {{ $t('room.new') }} {{ $t('room.message', newMessages) }}
             </div>
             <div v-if="rateLimited" class="text-center text-red-500">
-                You're sending messages too fast!<br>
-                Please wait a moment before sending another message.
+                {{ $t('room.tooFast') }}<br>
+                {{ $t('room.slowDown') }}
             </div>
             <div v-if="replyTo"
                 class="flex flex-row content-center items-center gap-2 p-2 text-sm bg-neutral-100 dark:bg-neutral-950/90 rounded-xl">
-                <p class="font-bold">Replying to {{ replyTo.sender.name }}:</p>
+                <p class="font-bold">{{ $t('room.replyingTo') }} {{ replyTo.sender.name }}:</p>
                 <p>{{ removeReplyTag(replyTo.content) }}</p>
                 <UButton @click="replyTo = null" color="neutral" size="xs" class="text-xs self-end" variant="link"
                     icon="i-heroicons-x-mark-16-solid" :padded="false" />
             </div>
-            <UInput v-model="message" placeholder="Type a message..." @keyup.enter="sendMessage"
+            <UInput v-model="message" :placeholder="$t('room.type')" @keyup.enter="sendMessage"
                 :ui="{ icon: { trailing: { pointer: '' } } }" maxlength="256" class="w-full">
                 <template #trailing>
                     <UButton color="neutral" variant="link" icon="i-mdi-send" :padded="false" @click="sendMessage" />
@@ -87,39 +89,41 @@
             </UInput>
         </div>
         <div v-else class="flex flex-col items-center justify-center w-full h-full gap-2">
-            <p>Cannot decrypt messages without a passphrase.</p>
-            <p>Please enter the room again to view messages.</p>
+            <p>{{ $t('rrom.decyrptError') }}</p>
+            <p>{{ $t('room.enterAgain') }}</p>
             <NuxtLink to="/" class="mt-2 text-primary-500 underline hover:text-primary-700">Home</NuxtLink>
         </div>
         <div v-if="wsDisconnected"
-            class="absolute top-0 left-0 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center">
-            <div class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
-                <p>Connection has been lost.</p>
-                <UButton @click="reconnect" color="neutral" variant="link" class="mt-4">Reconnect</UButton>
+            class="absolute top-0 left-0 w-full h-full z-50 bg-neutral-900/70 flex flex-col items-center justify-center">
+            <div
+                class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
+                <p>{{ $t('room.connectionLost') }}</p>
+                <UButton @click="reconnect" color="neutral" variant="link" class="mt-4">{{ $t('room.reconnect') }}
+                </UButton>
             </div>
         </div>
         <div v-else-if="selectedUser"
-            class="absolute top-0 left-0 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center gap-2 p-4"
+            class="absolute top-0 left-0 w-full h-full z-50 bg-neutral-900/70 flex flex-col items-center justify-center gap-2 p-4"
             @click="selectedUser = null">
             <Suspense>
                 <MiniProfile :user="selectedUser" :room="$route.params.id" @close="selectedUser = null" @click.stop />
                 <template #fallback>
                     <div
-                        class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
+                        class="h-40 w-80 bg-neutral-100 z-50 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
                         <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
                     </div>
                 </template>
             </Suspense>
         </div>
         <div v-else-if="showRoomStats"
-            class="absolute top-0 left-0 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center gap-2 p-4"
+            class="absolute top-0 left-0 w-full h-full z-50 bg-neutral-900/70 flex flex-col items-center justify-center gap-2 p-4"
             @click="showRoomStats = false">
             <Suspense>
                 <RoomStatsDialog :room="$route.params.id" :discover="discover" @close="showRoomStats = false"
                     @click.stop />
                 <template #fallback>
                     <div
-                        class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
+                        class="h-40 w-80 bg-neutral-100 z-50 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
                         <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
                     </div>
                 </template>
@@ -193,6 +197,7 @@ export default {
         const isLoadingMessages = ref(false);
         const messageCursor = ref(null);
         const messageLimit = 25;
+        const { t } = useI18n('global');
 
         definePageMeta({
             middleware: ['auth', 'unlocked'],
@@ -204,7 +209,7 @@ export default {
         if (error.value) {
             console.error('Failed to fetch room history:', error.value);
             const toast = useToast();
-            toast.add({ title: 'Failed to fetch room history', description: error.value.message, color: 'red' });
+            toast.add({ title: t('room.roomHistoryError'), description: error.value.message, color: 'red' });
         } else {
             if (data.value.code === 200) {
                 const fetchedMessages = data.value.messages;
@@ -289,7 +294,7 @@ export default {
             this.connect();
         } catch (error) {
             console.error('Failed to connect to chat:', error);
-            this.toast.add({ title: 'Error', description: error, color: 'red' });
+            this.toast.add({ title: this.$t('generic.error'), description: error, color: 'red' });
         }
         if (this.$refs.messagesContainer) {
             this.scrollToBottom();
@@ -361,7 +366,7 @@ export default {
                     console.log(`Left room ${messageData.room_id}`);
                 } else if (messageData.error) {
                     console.error("Server error:", messageData.error);
-                    this.toast.add({ title: 'Error', description: messageData.error, color: 'red' });
+                    this.toast.add({ title: this.$t('generic.error'), description: messageData.error, color: 'red' });
                 }
             });
         },
@@ -384,7 +389,7 @@ export default {
                 this.discover = data.discover;
             } else {
                 console.error('Failed to fetch room history:', error);
-                this.toast.add({ title: 'Failed to fetch room history', description: error, color: 'red' });
+                this.toast.add({ title: this.$t('room.roomHistoryError'), description: error, color: 'red' });
             }
         },
         setReplyTo(msg) {
@@ -406,7 +411,7 @@ export default {
                 if (!this.rateLimiter.tryRemoveTokens(1)) {
                     this.rateLimited = true;
                     console.error('Rate limit exceeded.');
-                    this.toast.add({ title: 'Rate limit exceeded', description: 'You`re sending messages too fast!', color: 'red' });
+                    this.toast.add({ title: this.$t('room.rateLimited'), description: this.$t('room.tooFast'), color: 'red' });
                     return;
                 }
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -551,16 +556,16 @@ export default {
                     }
                 } else {
                     this.toast.add({
-                        title: 'Error loading messages',
-                        description: response.message || 'Failed to load previous messages',
+                        title: this.$t('room.loadingError'),
+                        description: response.message || this.$t('room.failedToLoad'),
                         color: 'red'
                     });
                 }
             } catch (error) {
                 console.error('Failed to load more messages:', error);
                 this.toast.add({
-                    title: 'Error',
-                    description: 'Failed to load previous messages',
+                    title: this.$t('generic.error'),
+                    description: this.$t('room.failedToLoad'),
                     color: 'red'
                 });
                 this.hasMoreMessages = false;
@@ -625,11 +630,11 @@ export default {
             yesterday.setDate(yesterday.getDate() - 1);
             const timeOptions = { hour: '2-digit', minute: '2-digit' };
             if (d.toDateString() === today.toDateString()) {
-                return 'Today at ' + d.toLocaleTimeString([], timeOptions);
+                return this.$t('room.todayAt') + ' ' + d.toLocaleTimeString([], timeOptions);
             } else if (d.toDateString() === yesterday.toDateString()) {
-                return 'Yesterday at ' + d.toLocaleTimeString([], timeOptions);
+                return this.$t('room.yesterdayAt') + ' ' + d.toLocaleTimeString([], timeOptions);
             } else {
-                return d.toLocaleDateString() + ' at ' + d.toLocaleTimeString([], timeOptions);
+                return d.toLocaleDateString() + ' ' + this.$t('generic.at') + ' ' + d.toLocaleTimeString([], timeOptions);
             }
         },
         shouldShowDateDivider(index) {
@@ -702,7 +707,7 @@ export default {
                 // } catch (error) {
                 //     console.error('Failed "goto" operation:', error);
                 // }
-                this.toast.add({ title: 'Message not found', description: 'The message you are trying to find could not be located.', color: 'red' });
+                this.toast.add({ title: this.$t('room.messageNotFound'), description: this.$t('room.notLocated'), color: 'red' });
             }
         },
     },

@@ -1,46 +1,65 @@
 <template>
-    <div class="flex flex-col relative overflow-x-hidden h-screen w-screen">
-        <nav class="flex flex-row justify-between items-center w-full z-50 px-4 bg-gray-900">
-            <UHorizontalNavigation :links="links" class="p-2">
-                <template #default="{ link, isActive }">
-                    <span :data-active="isActive"
-                        class="data-[active=true]:text-primary-50 data-[active=true]:group-hover:text-black data-[active=true]:group-hover:dark:text-white relative">
-                        {{ link.label }}
-                    </span>
-                </template>
-            </UHorizontalNavigation>
-            <ClientOnly>
-                <UDropdown :items="items" v-model:open="open" :popper="{ arrow: true }" v-if="isAuthenticated">
-                    <div :data-open="open"
-                        class="group flex items-center gap-2 p-2 hover:bg-gray-800/40 data-[open=true]:bg-gray-800/40 text-gray-500 dark:text-gray-400 hover:text-primary-50 hover:dark:text-white data-[open=true]:text-primary-50 data-[open=true]:dark:text-white rounded-lg">
-                        <p class="text-sm select-none">Profile</p>
-                        <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'" :alt="user.name.toUpperCase()" size="xs"
-                            :class="open ? 'grayscale-0' : 'grayscale'" class="group-hover:grayscale-0" />
-                    </div>
-                    <template #account>
-                        <div class="flex items-center">
-                            <div class="ml-2">
-                                <p class="font-bold text-start">{{ user.name }}</p>
-                                <p class="text-xs text-start">{{ user.email }}</p>
-                            </div>
+    <div class="flex flex-col relative overflow-x-hidden font-mono h-screen w-screen">
+        <nav class="flex flex-row justify-between items-center w-full z-49 px-4 bg-neutral-100/60 dark:bg-neutral-900">
+            <NuxtLink to="/"
+                class="flex items-center gap-2 p-2 text-primary-500 hover:bg-neutral-800/40 dark:text-neutral-400 hover:text-primary-50 hover:dark:text-white rounded-lg">
+                <h1 class="text-xl">AllChat</h1>
+            </NuxtLink>
+            <div class="flex flex-row gap-2 items-center">
+                <div class="p-2 flex flex-row gap-2 self-end">
+                    <NuxtLink to="/leaderboard"
+                        class="group flex items-center gap-2 p-2 hover:bg-neutral-800/40 text-neutral-500 dark:text-neutral-400 hover:text-primary-50 hover:dark:text-white rounded-lg">
+                        <UIcon name="i-mdi-trophy" class="text-xl" />
+                        <span>{{ $t('generic.leaderboard') }}</span>
+                    </NuxtLink>
+                    <NuxtLink to="/about"
+                        class="group flex items-center gap-2 p-2 hover:bg-neutral-800/40 text-neutral-500 dark:text-neutral-400 hover:text-primary-50 hover:dark:text-white rounded-lg">
+                        <UIcon name="i-heroicons-information-circle" class="text-xl" />
+                        <span>{{ $t('generic.about') }}</span>
+                    </NuxtLink>
+                </div>
+                <ClientOnly>
+                    <UDropdownMenu :items="items" v-model:open="open" :popper="{ arrow: true }" v-if="isAuthenticated">
+                        <div :data-open="open"
+                            class="group flex items-center gap-2 p-2 h-fit cursor-pointer hover:bg-neutral-800/40 data-[open=true]:bg-neutral-800/40 text-neutral-500 dark:text-neutral-400 hover:text-primary-50 hover:dark:text-white data-[open=true]:text-primary-50 data-[open=true]:dark:text-white rounded-lg">
+                            <p class="text-md select-none">{{ $t("generic.profile") }}</p>
+                            <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'"
+                                :alt="user.name.toUpperCase()" size="xs" :class="open ? 'grayscale-0' : 'grayscale'"
+                                class="group-hover:grayscale-0" />
                         </div>
-                    </template>
-                </UDropdown>
-            </ClientOnly>
+                        <template #account>
+                            <div class="flex items-center">
+                                <div class="ml-2">
+                                    <p class="font-bold text-start">{{ user.name }}</p>
+                                    <p class="text-xs text-start">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </template>
+                        <template #item="{ item }"">
+                            <UButton :to="item.to" variant="link" class="flex items-center gap-2 w-full group-hover:text-neutral-700 group-hover:dark:text-white" color="neutral">
+                                <UIcon :name="item.icon" class="text-xl" />
+                                <span>{{ $t(`generic.${item.label}`) }}</span>
+                            </UButton>
+                        </template>
+                    </UDropdownMenu>
+                </ClientOnly>
+            </div>
         </nav>
-        <div v-if="showChangeNoteDialog" class="absolute top-0 left-0 w-full h-full bg-gray-900/70 flex flex-col items-center justify-center gap-2 p-4 z-50">
+        <div v-if="showChangeNoteDialog"
+            class="absolute top-0 left-0 w-full h-full bg-neutral-900/70 flex flex-col items-center justify-center gap-2 p-4 z-50">
             <Suspense>
                 <ChangeNoteDialog @close="showChangeNoteDialog = false" />
                 <template #fallback>
                     <div
-                        class="h-40 w-80 bg-gray-100 dark:bg-gray-950/90 flex flex-col items-center justify-center rounded-xl">
+                        class="h-40 w-80 bg-neutral-100 dark:bg-neutral-950/90 flex flex-col items-center justify-center rounded-xl">
                         <UIcon name="i-mdi-loading" class="animate-spin text-4xl" />
                     </div>
                 </template>
             </Suspense>
         </div>
         <slot class="overflow-y-auto" />
-        <footer class="bg-gray-900 text-gray-400 text-center p-4 mt-auto w-full">
+        <footer
+            class="bg-neutral-100/60 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-400 text-center p-4 mt-auto w-full">
             <p class="text-xs">&copy; {{ currentYear }} AllChat</p>
         </footer>
     </div>
@@ -50,13 +69,7 @@
 export default {
     data() {
         return {
-            links: [
-                [{ label: 'AllChat', to: '/' }],
-                [
-                    { label: 'Leaderboard', to: '/leaderboard', icon: 'i-mdi-trophy' },
-                    { label: 'About', to: '/about', icon: 'i-heroicons-information-circle' },
-                ]
-            ],
+
         }
     },
     setup() {
@@ -70,8 +83,10 @@ export default {
             const router = useRouter();
             router.push('/');
         }
-        const showChangeNoteDialog = ref(false);
 
+        const { t } = useI18n({ useScope: 'global' });
+
+        const showChangeNoteDialog = ref(false);
         const items = [
             [{
                 label: 'Account',
@@ -80,27 +95,27 @@ export default {
             }],
             [
                 {
-                    label: 'Profile',
+                    label: 'profile',
                     icon: 'i-mdi-account',
                     to: '/profile',
                 },
                 {
-                    label: 'Change Notes',
+                    label: 'changes',
                     icon: 'i-mdi-clipboard-text',
-                    click: () => {
+                    onSelect: () => {
                         showChangeNoteDialog.value = true;
                     }
                 },
                 {
-                    label: 'Settings',
+                    label: 'settings',
                     to: '/settings',
                     icon: 'i-heroicons-cog',
                 }
             ],
-            [{
-                label: 'Logout',
+            [{  
+                label: 'logout',
                 icon: 'i-mdi-logout',
-                click: () => logout(),
+                onSelect: () => logout(),
             }],
         ]
 
@@ -115,12 +130,19 @@ export default {
             ]
         });
 
-        return { user, open, items, isAuthenticated, showChangeNoteDialog };
+        const { setLocale } = useI18n({ useScope: 'global' });
+        onMounted(() => {
+            if (localStorage.getItem('locale')) {
+                setLocale(localStorage.getItem('locale'));
+            }
+        });
+
+        return { user, open, items, isAuthenticated, showChangeNoteDialog, setLocale };
     },
     computed: {
         currentYear() {
             return new Date().getFullYear();
         }
-    }
+    },
 }
 </script>

@@ -1,21 +1,21 @@
 <template>
     <div :class="user.id === msg.sender.id ? 'mr-10' : 'ml-10'" class="whitespace-pre-wrap hybrid-break cursor-pointer"
-        title="Go to original message" @click="$emit('goto', replyMsg.originalMsgId)">
+        :title="$t('room.goToMsg')" @click="$emit('goto', replyMsg.originalMsgId)">
         <p v-if="replyMsg.originalMsg && replyMsg.originalMsg != true"
             :class="user.id === msg.sender.id ? 'text-end' : 'text-start'"
             class="text-xs text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">
-            replying to {{ replyMsg.originalMsg.sender.name }}: {{
+            {{ $t('room.replyingTo').toLocaleLowerCase() }} {{ replyMsg.originalMsg.sender.name }}: {{
                 removeReplyTag(replyMsg.originalMsg.content) }}
         </p>
         <p v-else-if="replyMsg.originalMsg === true && fetchedOriginalMsg"
             :class="user.id === msg.sender.id ? 'text-end' : 'text-start'"
             class="text-xs text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">
-            replying to {{ fetchedOriginalMsg.sender.name }}: {{
+            {{ $t('room.replyingTo').toLocaleLowerCase() }} {{ fetchedOriginalMsg.sender.name }}: {{
                 removeReplyTag(fetchedOriginalMsg.content) }}
         </p>
         <p v-else :class="user.id === msg.sender.id ? 'text-end' : 'text-start'"
             class="text-xs text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">
-            replying to a deleted message
+            {{ $t('room.replyingToDeleted') }}
         </p>
         <p>{{ replyMsg.content }}</p>
     </div>
