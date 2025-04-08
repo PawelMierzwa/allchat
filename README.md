@@ -1,23 +1,25 @@
-# AllChat
+```
+                                                       
+      _/_/    _/  _/    _/_/_/  _/                    _/      
+   _/    _/  _/  _/  _/        _/_/_/      _/_/_/  _/_/_/_/   
+  _/_/_/_/  _/  _/  _/        _/    _/  _/    _/    _/        
+ _/    _/  _/  _/  _/        _/    _/  _/    _/    _/         
+_/    _/  _/  _/    _/_/_/  _/    _/    _/_/_/      _/_/      
+                                                      
+```
 
-AllChat is a secure and private chat application that allows users to have both private and public conversations using passphrases. Messages are encrypted, ensuring that only users with the correct passphrase can read them.
+[![GitHub Release](https://img.shields.io/github/v/release/pawelmierzwa/allchat?logo=github&color=blue)](https://github.com/PawelMierzwa/allchat/releases)
+[![Static Badge](https://img.shields.io/badge/Website-orange)](https://allchat.badinf.com)
+
+
+AllChat is a secure and private chat application that allows users to have both private and public conversations using passphrases. Messages are encrypted on the client, ensuring that only users with the correct passphrase can read them.
 
 ## Features
 
 - **Secure Messaging**: All messages are encrypted for privacy.
-- **Public and Private Rooms**: Create rooms that are either public or private.
 - **User Profiles**: View and interact with user profiles.
-- **Real-time Communication**: Messages are delivered in real-time using WebSockets.
-- **Rate Limiting**: Prevents users from sending messages too quickly.
-
-## Technologies Used
-
-- **Nuxt.js**: A powerful framework for building server-side rendered applications.
-- **Vue.js**: The progressive JavaScript framework for building user interfaces.
-- **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
-- **WebSockets**: For real-time communication.
-- **SQLite**: A lightweight database for storing user and chat data.
-- **JWT**: JSON Web Tokens for secure authentication.
+- **Real-time Communication**: Messages are delivered in real-time.
+- **Leaderboard system**: See most active users on the platform!
 
 ## Contributing
 

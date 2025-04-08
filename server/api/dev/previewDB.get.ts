@@ -13,6 +13,10 @@ export default defineEventHandler(async (event) => {
         return db.sql`SELECT * FROM accounts`;
     } else if (table === 'messages') {
         return db.sql`SELECT * FROM messages`;
+    } else if (table === 'changenotes') {
+        return db.sql`SELECT * FROM changenotes`;
+    } else if (table === 'unlocks') {
+        return db.sql`SELECT * FROM unlocks`;
     }
     // list all tables of the default database 
     return db.sql`SELECT name FROM sqlite_master WHERE type='table'`;

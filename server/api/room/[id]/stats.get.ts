@@ -99,8 +99,8 @@ export default defineEventHandler(async (event) => {
     } else {
         const userDb = useDatabase('users');
 
-        const totalUniqueUsersQueryResult = await userDb.sql`SELECT COUNT(DISTINCT userId) as count FROM unlocks WHERE roomId = ${id}`;
-        const totalUniqueUsers = totalUniqueUsersQueryResult.rows ? totalUniqueUsersQueryResult.rows[0].count : 0;
+        const totalUniqueUsersQueryResult = await userDb.sql`SELECT COUNT(DISTINCT userId) as userCount FROM unlocks WHERE roomId = ${id}`;
+        const totalUniqueUsers = totalUniqueUsersQueryResult.rows ? totalUniqueUsersQueryResult.rows[0].userCount : 0;
 
         const stats = {
             totalMessages,

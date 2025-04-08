@@ -1,14 +1,20 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
+  compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
-  modules: ['@nuxt/ui', '@pinia/nuxt'],
+  modules: ['@nuxt/ui', '@pinia/nuxt', '@nuxtjs/i18n'],
   pinia: {
     storesDirs: ['./stores/**'],
   },
   runtimeConfig: {
     jwtSecret: '',
     jwtAlg: '',
+    imgUploadUrl: '',
+    workerSecret: '',
+    public: {
+      imgUrl: '',
+    }
   },
   nitro: {
     experimental: {
@@ -30,5 +36,15 @@ export default defineNuxtConfig({
       },
     }
   },
-
+  colorMode: {
+    preference: 'dark',
+  },
+  i18n: {
+    bundle: {
+      optimizeTranslationDirective: false,
+    },
+    defaultLocale: 'en',
+    strategy: 'no_prefix',
+  },
+  css: ['~/assets/css/main.css'],
 })

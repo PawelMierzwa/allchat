@@ -30,5 +30,9 @@ export default defineEventHandler(async (event) => {
         await db.sql`DROP TABLE IF EXISTS leaderboard`; // users
         await db.sql`CREATE TABLE IF NOT EXISTS leaderboard ("id" TEXT PRIMARY KEY, "mostMessages" TEXT, "mostDiscoveredRooms" TEXT, "mostJoinedRooms" TEXT, "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`;
         return new Response('Table "leaderboard" created');
+    } else if (table === 'changenotes') {
+        await db.sql`DROP TABLE IF EXISTS changenotes`; // chat
+        await db.sql`CREATE TABLE IF NOT EXISTS changenotes ("id" INTEGER PRIMARY KEY, "notes" TEXT, "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`;
+        return new Response('Table "changenotes" created');
     }
 });

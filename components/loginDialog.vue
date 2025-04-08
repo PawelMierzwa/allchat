@@ -1,18 +1,23 @@
 <template>
     <UContainer
-        class="flex flex-col relative bg-gray-100 dark:bg-gray-950/90 rounded-xl items-center justify-between w-80 px-12 py-8">
+        class="flex flex-col relative bg-neutral-100 dark:bg-neutral-950/90 rounded-xl items-center justify-between w-80 px-12 py-8">
         <UButton class="absolute top-2 right-2" @click="$emit('close')" variant="link" icon="i-heroicons-x-mark" />
-        <h2 class="text-2xl">Login to AllChat</h2>
+        <h2 class="text-2xl">{{ $t('index.loginTo') }}</h2>
         <div class="flex flex-col my-4 space-y-4">
-            <UInput v-model="username" placeholder="Username" @input="errorMsg = ''" />
-            <UInput v-model="password" placeholder="Password" type="password" @keyup.enter="sendLogin"
+            <UInput v-model="username" :placeholder="$t('generic.username')" @input="errorMsg = ''" />
+            <UInput v-model="password" :placeholder="$t('generic.password')" type="password" @keyup.enter="sendLogin"
                 @input="errorMsg = ''" />
+            <UCheckbox :label="$t('generic.rememberMe')" v-model="remember">
+                <template #label="{ label }">
+                    <span class="text-sm text-neutral-500 select-none">{{ label }}</span>
+                </template>
+            </UCheckbox>
         </div>
         <UButton @click="sendLogin" :loading="loadingRequest" loading-icon="i-mdi-loading" :data-error="errorMsg"
-            class="data-[error='']:my-4">Login</UButton>
+            class="data-[error='']:my-1">{{ $t('generic.login') }}</UButton>
         <p class="text-red-600 text-center my-2">{{ errorMsg }}</p>
-        <UButton class="text-primary-500 hover:text-primary-800 cursor-pointer absolute bottom-2"
-            @click="$emit('noAcc')" variant="link">Don't have an account?</UButton>
+        <UButton class="text-primary-500 hover:text-primary-700 hover:underline transition-none absolute bottom-2"
+            @click="$emit('noAcc')" variant="link">{{ $t('generic.noAccount') }}</UButton>
     </UContainer>
 </template>
 
@@ -23,18 +28,24 @@ export default {
             username: '',
             password: '',
             loadingRequest: false,
-            errorMsg: ''
+            errorMsg: '',
+            remember: false
         }
     },
     methods: {
         async sendLogin() {
+            if (!this.username || !this.password) {
+                this.errorMsg = this.$t('index.fillInFields');
+                return;
+            }
             this.loadingRequest = true;
             try {
                 const response = await $fetch('/api/account/login', {
                     method: 'POST',
                     body: JSON.stringify({
                         username: this.username,
-                        password: this.password
+                        password: this.password,
+                        remember: this.remember
                     })
                 });
                 if (response.status === 200) {

@@ -1,36 +1,43 @@
 <template>
-    <UContainer class="flex flex-col items-center justify-between my-auto">
-        <h1 class="text-5xl">Your Profile</h1>
-        <div class="flex flex-col items-center justify-between mt-10 w-full">
-            <div class="flex items-center gap-4">
-                <UAvatar :src="'https://i.pravatar.cc/64?u=' + user.id" size="lg" />
+    <UContainer class="flex flex-col justify-between my-auto font-mono">
+        <h1 class="text-5xl text-center">{{ $t('profile.title') }}</h1>
+        <div
+            class="flex flex-col items-center justify-between mt-10 w-full p-8 bg-neutral-100 dark:bg-neutral-900 rounded-md">
+            <div class="flex flex-row items-center justify-between lg:gap-16 md:gap-8 gap-4">
                 <div>
-                    <h2 class="text-2xl">{{ user.name }}</h2>
-                    <p class="text-gray-500">{{ user.email }}</p>
+                    <div class="flex items-center gap-4">
+                        <UAvatar :src="useRuntimeConfig().public.imgUrl + user.id + '.webp'"
+                            :alt="user.name.toUpperCase()" size="3xl" />
+                        <div>
+                            <h2 class="text-3xl">{{ user.name }}</h2>
+                            <p class="text-neutral-500">{{ user.email }}</p>
+                        </div>
+                    </div>
                 </div>
+                <UButton variant="link" to="/settings#Account">{{ $t('profile.edit') }}</UButton>
             </div>
-            <UDivider class="my-4 w-1/2" />
-            <div v-if="data.stats" class="flex flex-col items-center justify-between p-4 bg-gray-100 dark:bg-gray-900 rounded-md">
-                <h3 class="text-xl">Stats</h3>
+            <USeparator class="my-4 w-1/2" />
+            <div v-if="data.stats" class="flex flex-col items-center justify-between">
+                <h3 class="text-xl">{{ $t('profile.stats') }}</h3>
                 <table class="[&>*>tr>td]:p-2 w-full h-full">
                     <tbody>
                         <tr>
-                            <td class="font-bold">Messages sent:</td>
+                            <td class="font-bold">{{ $t('profile.messages') }}:</td>
                             <td>{{ data.stats.totalMessages }}</td>
                         </tr>
                         <tr>
-                            <td class="font-bold">Rooms created:</td>
+                            <td class="font-bold">{{ $t('profile.rooms') }}:</td>
                             <td>{{ data.stats.totalRoomsDiscovered }}</td>
                         </tr>
                         <tr>
-                            <td class="font-bold">Rooms joined:</td>
+                            <td class="font-bold">{{ $t('profile.joined') }}:</td>
                             <td>{{ data.stats.totalRoomsJoined }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <div v-else-if="data.message" class="text-center">
-                <p>Error fetching user data</p>
+                <p>{{ $T('profile.error') }}</p>
                 <p class="text-red-300">{{ data.code }}, {{ data.message }}</p>
             </div>
         </div>
@@ -43,6 +50,10 @@ const user = computed(() => sessionStore.user);
 
 definePageMeta({
     middleware: 'auth',
+});
+
+useHead({
+    title: 'Your profile',
 });
 
 const { data, error } = await useFetch('/api/user/' + user.value.id + '/stats?size=lg');

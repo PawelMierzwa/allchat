@@ -1,18 +1,28 @@
 <template>
     <UContainer class="font-mono md:p-32 pt-32 flex flex-col items-center">
-        <h1 class="text-5xl w-fit mx-auto">About AllChat</h1>
+        <h1 class="text-5xl w-fit mx-auto">{{ $t('about.title') }}</h1>
         <div class="flex flex-col items-center justify-between mx-auto mt-10 w-1/2 gap-4">
             <p>
-                AllChat allows you to have both private and public conversations, 
-                as long as your passphrase is secure.
+                {{ $t('about.description') }}
             </p>
             <p>
-                I created AllChat to provide a secure and private chat experience for everyone. 
-                Messages are encrypted, and only you and people with the passphrase can read them.
+                {{ $t('about.features') }}
             </p>
         </div>
         <div class="flex flex-col items-center justify-between mt-10 md:w-1/2 gap-4">
-            <p>This website is source-available, with it's <NuxtLink to="https://github.com/pawelmierzwa/allchat" class="underline hover:text-gray-400">code available on GitHub.</NuxtLink></p>
+            <p>{{ $t('about.sourceAvailable') }}, {{ $t('about.withIts') }} <NuxtLink to="https://github.com/pawelmierzwa/allchat" class="underline hover:text-neutral-400">{{ $t('about.sourceCode') }}</NuxtLink></p>
         </div>
     </UContainer>
 </template>
+
+<script setup>
+const { t } = useI18n();
+useHead({
+    title: t('about.title'),
+});
+
+useSeoMeta({
+    title: 'About',
+    description: 'Learn more about AllChat.',
+});
+</script>

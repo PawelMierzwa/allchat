@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+button:not([disabled]) {
+    cursor: pointer;
+}
+
+.dark {
+    --ui-bg: #121212
+}

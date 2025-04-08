@@ -2,10 +2,10 @@
     <div class="flex flex-col items-center justify-between w-full gap-4">
         <h2 class="text-xl">{{ header }}</h2>
         <ul v-if="leaderboardEntries.length > 0"
-            class="flex flex-col list-none items-center justify-between divide-y w-full overflow-y-auto divide-gray-600 divide-dashed shadow-xl bg-gray-100 dark:bg-gray-900 py-6 rounded-xl px-8">
+            class="flex flex-col list-none items-center justify-between divide-y w-full overflow-y-auto divide-neutral-600 divide-dashed shadow-xl bg-neutral-100 dark:bg-neutral-900 py-6 rounded-xl px-8">
             <li v-for="(user, index) in leaderboardEntries" :key="index" :title="user.username + `'s profile`"
                 @click="openProfile(user)"
-                class="flex flex-row items-center rounded hover:bg-gray-400/70 hover:dark:bg-gray-800/70 transition justify-between w-full gap-4 p-2 cursor-pointer">
+                class="flex flex-row items-center rounded hover:bg-neutral-400/70 hover:dark:bg-neutral-800/70 transition justify-between w-full gap-4 p-2 cursor-pointer">
                 <p class="text-md">{{ user.username }}</p>
                 <p class="text-md">{{ user.count }}</p>
             </li>
@@ -37,30 +37,6 @@ const openProfile = function (user) {
 </script>
 
 <style scoped>
-::-webkit-scrollbar {
-    width: 3px;
-    height: 12px;
-}
-
-::-webkit-scrollbar-track {
-    background: theme('colors.gray.800');
-}
-
-::-webkit-scrollbar-thumb {
-    background: theme('colors.gray.600');
-    border-radius: 6px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: theme('colors.orange.600');
-}
-
-ul {
-    scrollbar-width: thin;
-    scrollbar-color: theme('colors.gray.600') theme('colors.gray.900');
-    scrollbar-arrow-color: theme('colors.gray.900');
-}
-
 ul.dynamic-height {
     max-height: 300px;
     overflow-y: auto;
